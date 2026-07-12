@@ -37,7 +37,7 @@ import {
 import { useState } from "react";
 
 export default function Dashboard() {
-  const { user, isLoading } = useAuth({ redirectOnUnauthenticated: true });
+  const { user, isLoading } = useAuth();
   const { data: children } = trpc.child.list.useQuery();
   const { data: ageGroups } = trpc.ageGroup.list.useQuery();
   const { data: subs } = trpc.subscription.list.useQuery();

@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 
 export default function Diary() {
-  useAuth({ redirectOnUnauthenticated: true });
+  useAuth();
   const { data: children } = trpc.child.list.useQuery();
   const [searchParams] = useSearchParams();
   const initialChild = searchParams.get("child");

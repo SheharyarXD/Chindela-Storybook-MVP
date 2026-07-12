@@ -14,7 +14,7 @@
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push"
+    "db:push": "echo 'db:push is a dev-emergency escape hatch only -- a committed migration history now exists under db/migrations/. Use db:generate + db:migrate instead.' && drizzle-kit push"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.965.0",

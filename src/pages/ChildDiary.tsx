@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router";
 import { trpc } from "@/providers/trpc";
+import { useChildAuth } from "@/hooks/useChildAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -37,12 +38,9 @@ export default function ChildDiary() {
   const [selectedMood, setSelectedMood] = useState<"happy" | "excited" | "calm" | "loved" | "sad">("happy");
   const [submitted, setSubmitted] = useState(false);
 
-  const childSession = trpc.auth.childMe.useQuery(undefined, { retry: false });
+  const childSession = useChildAuth();
   const entries = trpc.diary.childEntries.useQuery(undefined, { enabled: !!childSession.data });
   const logout = trpc.auth.childLogout.useMutation({ onSuccess: () => navigate("/child-login") });
-  useEffect(() => {
-    if (!childSession.isLoading && !childSession.data) navigate("/child-login", { replace: true });
-  }, [childSession.data, childSession.isLoading, navigate]);
 
   const createEntry = trpc.diary.create.useMutation({
     onSuccess: () => {

@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 
 export default function Subscriptions() {
-  useAuth({ redirectOnUnauthenticated: true });
+  useAuth();
   const { data: children } = trpc.child.list.useQuery();
   const { data: ageGroups } = trpc.ageGroup.list.useQuery();
   const { data: subs } = trpc.subscription.list.useQuery();

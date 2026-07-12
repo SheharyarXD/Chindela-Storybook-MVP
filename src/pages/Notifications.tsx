@@ -26,7 +26,7 @@ const typeConfig: Record<string, { icon: any; color: string; bg: string }> = {
 };
 
 export default function Notifications() {
-  useAuth({ redirectOnUnauthenticated: true });
+  useAuth();
   const { data: notifications } = trpc.notification.list.useQuery();
   const utils = trpc.useUtils();
 

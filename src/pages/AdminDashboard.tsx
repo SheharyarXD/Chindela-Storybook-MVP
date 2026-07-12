@@ -46,31 +46,14 @@ import {
   Layers,
   Calendar,
 } from "lucide-react";
-import { useNavigate } from "react-router";
 
 export default function AdminDashboard() {
-  const { user, isLoading } = useAuth({ redirectOnUnauthenticated: true });
-  const navigate = useNavigate();
+  const { isLoading } = useAuth();
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500" />
-      </div>
-    );
-  }
-
-  if (user?.role !== "admin") {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6 text-center">
-            <Shield className="h-12 w-12 text-red-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
-            <p className="text-gray-500 mb-4">You need admin privileges to access this page.</p>
-            <Button onClick={() => navigate("/")}>Go Home</Button>
-          </CardContent>
-        </Card>
       </div>
     );
   }

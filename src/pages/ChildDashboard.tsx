@@ -1,6 +1,6 @@
-import { useEffect } from "react";
 import { useNavigate, Link } from "react-router";
 import { trpc } from "@/providers/trpc";
+import { useChildAuth } from "@/hooks/useChildAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,12 +18,9 @@ export default function ChildDashboard() {
   const navigate = useNavigate();
   const { data: characters } = trpc.character.list.useQuery();
   const { data: safetyHeaders } = trpc.safety.active.useQuery();
-  const childSession = trpc.auth.childMe.useQuery(undefined, { retry: false });
+  const childSession = useChildAuth();
   const stories = trpc.story.list.useQuery(undefined, { enabled: !!childSession.data, retry: false });
   const logout = trpc.auth.childLogout.useMutation({ onSuccess: () => navigate("/child-login") });
-  useEffect(() => {
-    if (!childSession.isLoading && !childSession.data) navigate("/child-login", { replace: true });
-  }, [childSession.data, childSession.isLoading, navigate]);
 
   const handleLogout = () => {
     logout.mutate();

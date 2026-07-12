@@ -1,9 +1,10 @@
-import { useParams, useNavigate } from "react-router";
+import { useParams } from "react-router";
 import { trpc } from "@/providers/trpc";
+import { useChildAuth } from "@/hooks/useChildAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -17,7 +18,6 @@ import { Link } from "react-router";
 
 export default function ChildReader() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const storyId = parseInt(id || "1");
   const { data: story } = trpc.story.byId.useQuery({ id: storyId });
   const { data: lessons } = trpc.story.lessons.useQuery({ storyId });
@@ -25,10 +25,7 @@ export default function ChildReader() {
 
   const [currentPage, setCurrentPage] = useState(0);
 
-  const childSession = trpc.auth.childMe.useQuery(undefined, { retry: false });
-  useEffect(() => {
-    if (!childSession.isLoading && !childSession.data) navigate("/child-login", { replace: true });
-  }, [childSession.data, childSession.isLoading, navigate]);
+  useChildAuth();
 
   if (!story) {
     return (

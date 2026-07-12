@@ -6,6 +6,9 @@ import { appRouter } from "./router";
 import { createContext } from "./context";
 import { env } from "./lib/env";
 import { rateLimit, sameOrigin, securityHeaders } from "./lib/security";
+import { initAdminBootstrap } from "./lib/bootstrap";
+
+initAdminBootstrap();
 
 const app = new Hono<{ Bindings: HttpBindings }>();
 

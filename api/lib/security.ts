@@ -4,7 +4,7 @@ const WINDOW_MS = 60_000;
 const MAX_REQUESTS_PER_WINDOW = 120;
 const buckets = new Map<string, { count: number; resetAt: number }>();
 
-function clientKey(request: Request) {
+export function clientKey(request: Request) {
   // Hosting platforms commonly provide this header. It is intentionally only
   // used as a rate-limit key, never as an authentication or authorization fact.
   return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";

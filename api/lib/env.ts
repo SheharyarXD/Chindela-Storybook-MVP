@@ -13,6 +13,7 @@ export const env = {
   databaseUrl: required("DATABASE_URL"),
   sessionSecret: required("SESSION_SECRET"),
   adminEmail: process.env.ADMIN_EMAIL?.trim().toLowerCase() ?? "",
+  adminBootstrapToken: process.env.ADMIN_BOOTSTRAP_TOKEN?.trim() ?? "",
   geminiApiKey: process.env.GEMINI_API_KEY?.trim() ?? "",
   geminiModel: process.env.GEMINI_MODEL?.trim() || "gemini-2.5-flash",
 };

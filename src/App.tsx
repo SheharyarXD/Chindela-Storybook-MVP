@@ -13,23 +13,34 @@ import ChildLogin from './pages/ChildLogin'
 import ChildDashboard from './pages/ChildDashboard'
 import ChildReader from './pages/ChildReader'
 import ChildDiary from './pages/ChildDiary'
+import ProtectedRoute from './components/ProtectedRoute'
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/admin" element={<AdminDashboard />} />
-      <Route path="/stories" element={<StoryBrowser />} />
-      <Route path="/stories/:id" element={<StoryReader />} />
-      <Route path="/diary" element={<Diary />} />
-      <Route path="/subscriptions" element={<Subscriptions />} />
-      <Route path="/notifications" element={<Notifications />} />
       <Route path="/child-login" element={<ChildLogin />} />
-      <Route path="/child" element={<ChildDashboard />} />
-      <Route path="/child/read/:id" element={<ChildReader />} />
-      <Route path="/child/diary" element={<ChildDiary />} />
+
+      <Route element={<ProtectedRoute variant="parent" />}>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/stories" element={<StoryBrowser />} />
+        <Route path="/stories/:id" element={<StoryReader />} />
+        <Route path="/diary" element={<Diary />} />
+        <Route path="/subscriptions" element={<Subscriptions />} />
+        <Route path="/notifications" element={<Notifications />} />
+      </Route>
+
+      <Route element={<ProtectedRoute variant="admin" />}>
+        <Route path="/admin" element={<AdminDashboard />} />
+      </Route>
+
+      <Route element={<ProtectedRoute variant="child" />}>
+        <Route path="/child" element={<ChildDashboard />} />
+        <Route path="/child/read/:id" element={<ChildReader />} />
+        <Route path="/child/diary" element={<ChildDiary />} />
+      </Route>
+
       <Route path="*" element={<NotFound />} />
     </Routes>
   )
