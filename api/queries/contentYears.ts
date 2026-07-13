@@ -37,3 +37,7 @@ export async function updateContentYear(id: number, data: Partial<InsertContentY
     .where(eq(schema.contentYears.id, id));
   return findContentYearById(id);
 }
+
+export async function deleteContentYear(id: number) {
+  await getDb().delete(schema.contentYears).where(eq(schema.contentYears.id, id));
+}

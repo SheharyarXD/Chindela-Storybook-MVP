@@ -1,5 +1,5 @@
 import { useParams } from "react-router";
-import { trpc } from "@/providers/trpc";
+import { trpc } from "@/providers/trpcClient";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,31 @@ import {
 } from "lucide-react";
 import { Link } from "react-router";
 
+interface StorySummary {
+  title: string;
+  dayNumber: number;
+  theme?: string | null;
+}
+
+interface CharacterSummary {
+  name: string;
+  imageUrl?: string | null;
+  color?: string | null;
+  description?: string | null;
+  personality?: string | null;
+  catchphrase?: string | null;
+}
+
+interface LessonSummary {
+  pageNumber: number;
+  title: string;
+  content: string;
+  imageUrl?: string | null;
+  audioUrl?: string | null;
+  characterDialogue?: string | null;
+  interactiveElement?: string | null;
+}
+
 export default function StoryReader() {
   const { id } = useParams<{ id: string }>();
   const storyId = parseInt(id || "0");
@@ -25,6 +50,9 @@ export default function StoryReader() {
   const { data: safetyHeaders } = trpc.safety.active.useQuery();
 
   const [currentPage, setCurrentPage] = useState(0);
+  // Deterministic (not Math.random) so it stays stable across re-renders
+  // without needing an effect -- still rotates day to day.
+  const safetyHeaderIndex = safetyHeaders && safetyHeaders.length > 0 ? new Date().getDate() % safetyHeaders.length : 0;
 
   if (!story) {
     return (
@@ -108,7 +136,7 @@ export default function StoryReader() {
           <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-3">
             <Shield className="h-5 w-5 text-blue-500 flex-shrink-0" />
             <p className="text-sm text-blue-700">
-              {safetyHeaders[Math.floor(Math.random() * safetyHeaders.length)]?.message}
+              {safetyHeaders[safetyHeaderIndex]?.message}
             </p>
           </div>
         )}
@@ -193,7 +221,14 @@ export default function StoryReader() {
   );
 }
 
-function CoverPage({ data, story }: { data: any; story: any }) {
+interface CoverPageData {
+  title: string;
+  description?: string | null;
+  coverImage?: string | null;
+  character?: { name: string } | null;
+}
+
+function CoverPage({ data, story }: { data: CoverPageData; story: StorySummary }) {
   return (
     <div className="h-full flex flex-col items-center justify-center text-center">
       {data.coverImage ? (
@@ -224,7 +259,7 @@ function CoverPage({ data, story }: { data: any; story: any }) {
   );
 }
 
-function CharacterPage({ character }: { character: any }) {
+function CharacterPage({ character }: { character: CharacterSummary }) {
   return (
     <div className="h-full flex flex-col items-center justify-center text-center">
       {character.imageUrl ? (
@@ -254,7 +289,7 @@ function CharacterPage({ character }: { character: any }) {
   );
 }
 
-function LessonPage({ lesson }: { lesson: any }) {
+function LessonPage({ lesson }: { lesson: LessonSummary }) {
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center gap-2 mb-4">
@@ -300,7 +335,7 @@ function LessonPage({ lesson }: { lesson: any }) {
   );
 }
 
-function MoralPage({ moralLesson, story }: { moralLesson: string; story: any }) {
+function MoralPage({ moralLesson, story }: { moralLesson: string; story: StorySummary }) {
   return (
     <div className="h-full flex flex-col items-center justify-center text-center">
       <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-300 to-orange-300 flex items-center justify-center mb-6">

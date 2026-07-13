@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router";
-import { trpc } from "@/providers/trpc";
+import { trpc } from "@/providers/trpcClient";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { motion } from "framer-motion";
+import type { LucideIcon } from "lucide-react";
 import {
   BookOpen,
   MessageSquare,
@@ -43,7 +44,7 @@ export default function Diary() {
     { enabled: selectedChild !== "all" }
   );
 
-  const moodIcons: Record<string, any> = {
+  const moodIcons: Record<string, LucideIcon> = {
     happy: Smile,
     sad: Frown,
     excited: Zap,
@@ -173,11 +174,14 @@ export default function Diary() {
                     <Card key={fb.id} className="overflow-hidden">
                       <div className="h-1 bg-gradient-to-r from-purple-400 to-pink-400" />
                       <CardContent className="p-5">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Sparkles className="h-5 w-5 text-purple-500" />
-                          <span className="font-medium text-purple-700">
-                            {fb.characterName || "Chindela"}
-                          </span>
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <Sparkles className="h-5 w-5 text-purple-500" />
+                            <span className="font-medium text-purple-700">
+                              {fb.characterName || "Chindela"}
+                            </span>
+                          </div>
+                          <Badge variant="outline">Attempt {fb.attemptNumber}</Badge>
                         </div>
 
                         <div className="space-y-3">
@@ -187,6 +191,24 @@ export default function Diary() {
                             </p>
                             <p className="text-sm text-gray-700">{fb.positiveFeedback}</p>
                           </div>
+
+                          {fb.mistakesExplained && (
+                            <div className="p-3 bg-orange-50 rounded-lg border border-orange-100">
+                              <p className="text-xs font-medium text-orange-600 uppercase tracking-wide">
+                                What to fix, and why
+                              </p>
+                              <p className="text-sm text-orange-700">{fb.mistakesExplained}</p>
+                            </div>
+                          )}
+
+                          {fb.hints && (
+                            <div className="p-3 bg-purple-50 rounded-lg border border-purple-100">
+                              <p className="text-xs font-medium text-purple-600 uppercase tracking-wide">
+                                Hint
+                              </p>
+                              <p className="text-sm text-purple-700">{fb.hints}</p>
+                            </div>
+                          )}
 
                           {fb.reflectionGuidance && (
                             <div>

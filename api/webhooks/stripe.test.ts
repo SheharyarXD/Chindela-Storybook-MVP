@@ -73,4 +73,22 @@ describe("handleStripeWebhook", () => {
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ received: true });
   });
+
+  it("dispatches invoice.payment_failed without touching the DB when there's no subscription reference", async () => {
+    // No parent.subscription_details.subscription -> handler must return
+    // early before any DB lookup, same no-DB-required proof as above.
+    const app = await buildApp();
+    const payload = JSON.stringify({
+      id: "evt_4",
+      type: "invoice.payment_failed",
+      data: { object: { id: "in_test_1", parent: null } },
+    });
+    const res = await app.request("/webhook", {
+      method: "POST",
+      headers: { "stripe-signature": await sign(payload) },
+      body: payload,
+    });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ received: true });
+  });
 });

@@ -8,9 +8,11 @@ import {
   cancelSubscription,
   findPaymentsByParent,
 } from "./queries/subscriptions";
+import { createContribution, findContributionsByParent } from "./queries/contributions";
 import { setStripeCustomerId } from "./queries/users";
-import { getStripe, MONTHLY_PRICE_GBP_PENCE, computeCancelAt } from "./lib/stripe";
+import { getStripe, computeCancelAt } from "./lib/stripe";
 import { env } from "./lib/env";
+import { SubscriptionPricingGBPPence, ContributionLimits } from "@contracts/constants";
 
 export const subscriptionRouter = createRouter({
   list: authedQuery.query(async ({ ctx }) => {
@@ -34,8 +36,15 @@ export const subscriptionRouter = createRouter({
       z.object({
         childId: z.number(),
         ageGroupId: z.number(),
-        duration: z.union([z.literal(1), z.literal(3), z.literal(6), z.literal(12)]),
+        duration: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(6), z.literal(12)]),
         isAutoRenew: z.boolean().default(false),
+        // Optional one-time donation collected alongside this checkout, in GBP pence.
+        contributionGBPPence: z
+          .number()
+          .int()
+          .min(ContributionLimits.minGBPPence)
+          .max(ContributionLimits.maxGBPPence)
+          .optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -48,7 +57,8 @@ export const subscriptionRouter = createRouter({
       const ageGroup = await findAgeGroupById(input.ageGroupId);
       if (!ageGroup) throw new Error("Age group not found.");
 
-      const pricePerMonth = MONTHLY_PRICE_GBP_PENCE / 100;
+      const unitAmountGBPPence = SubscriptionPricingGBPPence[input.duration as keyof typeof SubscriptionPricingGBPPence] / input.duration;
+      const pricePerMonth = unitAmountGBPPence / 100;
       const totalPrice = pricePerMonth * input.duration;
 
       let stripeCustomerId = ctx.user.stripeCustomerId;
@@ -77,25 +87,53 @@ export const subscriptionRouter = createRouter({
         isAutoRenew: input.isAutoRenew,
       });
 
+      // The contribution row is created up front (status "pending"), same as the
+      // subscription -- the webhook is the only thing allowed to mark it completed.
+      let contributionId: number | undefined;
+      if (input.contributionGBPPence) {
+        contributionId = await createContribution({
+          parentId: ctx.user.id,
+          subscriptionId: subscription!.id,
+          amount: (input.contributionGBPPence / 100).toString(),
+          currency: "GBP",
+          status: "pending",
+        });
+      }
+
+      const lineItems: import("stripe").default.Checkout.SessionCreateParams.LineItem[] = [
+        {
+          price_data: {
+            currency: "gbp",
+            unit_amount: unitAmountGBPPence,
+            recurring: { interval: "month" },
+            product_data: { name: `Chindela Storybook — ${ageGroup.name}` },
+          },
+          quantity: 1,
+        },
+      ];
+      if (input.contributionGBPPence) {
+        lineItems.push({
+          price_data: {
+            currency: "gbp",
+            unit_amount: input.contributionGBPPence,
+            product_data: { name: "Optional contribution — thank you!" },
+          },
+          quantity: 1,
+        });
+      }
+
+      const metadata: Record<string, string> = { localSubscriptionId: String(subscription!.id) };
+      if (contributionId) metadata.localContributionId = String(contributionId);
+
       const session = await getStripe().checkout.sessions.create({
         mode: "subscription",
         customer: stripeCustomerId,
-        line_items: [
-          {
-            price_data: {
-              currency: "gbp",
-              unit_amount: MONTHLY_PRICE_GBP_PENCE,
-              recurring: { interval: "month" },
-              product_data: { name: `Chindela Storybook — ${ageGroup.name}` },
-            },
-            quantity: 1,
-          },
-        ],
+        line_items: lineItems,
         subscription_data: {
-          metadata: { localSubscriptionId: String(subscription!.id) },
+          metadata,
           ...(input.isAutoRenew ? {} : { cancel_at: computeCancelAt(input.duration) }),
         },
-        metadata: { localSubscriptionId: String(subscription!.id) },
+        metadata,
         success_url: `${env.appUrl}/subscriptions?checkout=success`,
         cancel_url: `${env.appUrl}/subscriptions?checkout=cancel`,
       });
@@ -123,5 +161,9 @@ export const subscriptionRouter = createRouter({
 
   payments: authedQuery.query(async ({ ctx }) => {
     return findPaymentsByParent(ctx.user.id);
+  }),
+
+  contributions: authedQuery.query(async ({ ctx }) => {
+    return findContributionsByParent(ctx.user.id);
   }),
 });

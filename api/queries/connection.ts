@@ -5,7 +5,9 @@ import * as relations from "@db/relations";
 
 const fullSchema = { ...schema, ...relations };
 
-let instance: ReturnType<typeof drizzle<typeof fullSchema>>;
+type Database = ReturnType<typeof drizzle<typeof fullSchema>>;
+
+let instance: Database;
 
 export function getDb() {
   if (!instance) {
@@ -16,3 +18,7 @@ export function getDb() {
   }
   return instance;
 }
+
+// Accepted by query helpers so callers can run several writes inside a single
+// getDb().transaction(async (tx) => { ... }) block for all-or-nothing commits.
+export type DbOrTx = Database | Parameters<Parameters<Database["transaction"]>[0]>[0];

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router";
-import { trpc } from "@/providers/trpc";
+import { trpc } from "@/providers/trpcClient";
 import { useAuth } from "@/hooks/useAuth";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import {
   CreditCard,
@@ -23,7 +24,9 @@ import {
   Calendar,
   PoundSterling,
   Shield,
+  Heart,
 } from "lucide-react";
+import { SubscriptionPricingGBPPence, SUBSCRIPTION_PRICE_PER_MONTH_GBP_PENCE, ContributionLimits } from "@contracts/constants";
 
 export default function Subscriptions() {
   useAuth();
@@ -37,6 +40,7 @@ export default function Subscriptions() {
   const [selectedAgeGroup, setSelectedAgeGroup] = useState("");
   const [selectedDuration, setSelectedDuration] = useState<string>("1");
   const [autoRenew, setAutoRenew] = useState(false);
+  const [contribution, setContribution] = useState("");
 
   const utils = trpc.useUtils();
   const createSub = trpc.subscription.create.useMutation({
@@ -49,23 +53,31 @@ export default function Subscriptions() {
   });
 
   const durations = [
-    { value: 1, label: "1 Month", price: 1 },
-    { value: 3, label: "3 Months", price: 3 },
-    { value: 6, label: "6 Months", price: 6 },
-    { value: 12, label: "12 Months", price: 12 },
-  ];
+    { value: 1, label: "1 Month" },
+    { value: 2, label: "2 Months" },
+    { value: 3, label: "3 Months" },
+    { value: 6, label: "6 Months" },
+    { value: 12, label: "12 Months" },
+  ] as const;
 
-  const selectedPrice = durations.find(
-    (d) => d.value === parseInt(selectedDuration)
-  )?.price || 1;
+  const pricePerMonth = SUBSCRIPTION_PRICE_PER_MONTH_GBP_PENCE / 100;
+  const durationNum = parseInt(selectedDuration) as keyof typeof SubscriptionPricingGBPPence;
+  const selectedPrice = SubscriptionPricingGBPPence[durationNum] / 100;
+
+  const contributionGBPPence = contribution ? Math.round(parseFloat(contribution) * 100) : 0;
+  const contributionError =
+    contribution && (contributionGBPPence < ContributionLimits.minGBPPence || contributionGBPPence > ContributionLimits.maxGBPPence)
+      ? `Enter an amount between £${(ContributionLimits.minGBPPence / 100).toFixed(2)} and £${(ContributionLimits.maxGBPPence / 100).toFixed(2)}`
+      : undefined;
 
   const handleSubscribe = () => {
-    if (!selectedChild || !selectedAgeGroup) return;
+    if (!selectedChild || !selectedAgeGroup || contributionError) return;
     createSub.mutate({
       childId: parseInt(selectedChild),
       ageGroupId: parseInt(selectedAgeGroup),
-      duration: parseInt(selectedDuration) as 1 | 3 | 6 | 12,
+      duration: durationNum,
       isAutoRenew: autoRenew,
+      ...(contributionGBPPence > 0 ? { contributionGBPPence } : {}),
     });
   };
 
@@ -172,7 +184,9 @@ export default function Subscriptions() {
                           }`}
                         >
                           <p className="font-medium text-sm">{d.label}</p>
-                          <p className="text-xs text-gray-500">£{d.price}</p>
+                          <p className="text-xs text-gray-500">
+                            £{(SubscriptionPricingGBPPence[d.value] / 100).toFixed(2)}
+                          </p>
                         </button>
                       ))}
                     </div>
@@ -181,9 +195,36 @@ export default function Subscriptions() {
                   <div className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
                       <label htmlFor="auto-renew" className="text-sm font-medium">Auto-renew</label>
-                      <p className="text-xs text-gray-500">Bill £1/month automatically until cancelled</p>
+                      <p className="text-xs text-gray-500">
+                        {`Bill £${pricePerMonth.toFixed(2)}/month automatically until cancelled`}
+                      </p>
                     </div>
                     <Switch id="auto-renew" checked={autoRenew} onCheckedChange={setAutoRenew} />
+                  </div>
+
+                  <div>
+                    <label htmlFor="contribution" className="text-sm font-medium mb-2 flex items-center gap-1.5">
+                      <Heart className="h-4 w-4 text-rose-400" />
+                      Optional contribution
+                    </label>
+                    <div className="relative">
+                      <PoundSterling className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="contribution"
+                        type="number"
+                        min={ContributionLimits.minGBPPence / 100}
+                        max={ContributionLimits.maxGBPPence / 100}
+                        step="0.01"
+                        placeholder="0.00"
+                        value={contribution}
+                        onChange={(e) => setContribution(e.target.value)}
+                        className="pl-8"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Add a one-time donation to support Chindela Storybook — completely optional.
+                    </p>
+                    {contributionError && <p className="text-xs text-red-600 mt-1">{contributionError}</p>}
                   </div>
 
                   <div className="p-4 bg-gray-50 rounded-lg">
@@ -191,17 +232,18 @@ export default function Subscriptions() {
                       <span className="text-sm text-gray-500">Total Price</span>
                       <span className="text-2xl font-bold text-gray-900 flex items-center gap-1">
                         <PoundSterling className="h-5 w-5" />
-                        {selectedPrice}
+                        {(selectedPrice + (contributionGBPPence > 0 ? contributionGBPPence / 100 : 0)).toFixed(2)}
                       </span>
                     </div>
                     <p className="text-xs text-gray-400 mt-1">
-                      £1 per month{autoRenew ? ", billed monthly until cancelled" : ` for ${selectedDuration} month(s), then stops automatically`}
+                      {`£${pricePerMonth.toFixed(2)} per month${autoRenew ? ", billed monthly until cancelled" : ` for ${selectedDuration} month(s), then stops automatically`}`}
+                      {contributionGBPPence > 0 ? ` + £${(contributionGBPPence / 100).toFixed(2)} contribution` : ""}
                     </p>
                   </div>
 
                   <Button
                     onClick={handleSubscribe}
-                    disabled={!selectedChild || !selectedAgeGroup || createSub.isPending}
+                    disabled={!selectedChild || !selectedAgeGroup || !!contributionError || createSub.isPending}
                     className="w-full bg-amber-500 hover:bg-amber-600"
                   >
                     {createSub.isPending ? "Redirecting to checkout..." : "Subscribe Now"}

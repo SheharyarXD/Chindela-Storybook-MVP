@@ -1,10 +1,10 @@
 import { useParams } from "react-router";
-import { trpc } from "@/providers/trpc";
+import { trpc } from "@/providers/trpcClient";
 import { useChildAuth } from "@/hooks/useChildAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -13,8 +13,44 @@ import {
   Sparkles,
   Home,
   PenLine,
+  Bookmark,
 } from "lucide-react";
 import { Link } from "react-router";
+
+interface ReaderStory {
+  title: string;
+  description?: string | null;
+  coverImage?: string | null;
+  dayNumber: number;
+  theme?: string | null;
+  ageGroup?: { name: string } | null;
+  character?: { name: string } | null;
+}
+
+interface ReaderCharacter {
+  name: string;
+  imageUrl?: string | null;
+  color?: string | null;
+  description?: string | null;
+  personality?: string | null;
+  catchphrase?: string | null;
+}
+
+interface ReaderLesson {
+  id: number;
+  pageNumber: number;
+  title: string;
+  content: string;
+  imageUrl?: string | null;
+  audioUrl?: string | null;
+  characterDialogue?: string | null;
+}
+
+type ReaderPage =
+  | { type: "cover"; story: ReaderStory }
+  | { type: "character"; character: ReaderCharacter }
+  | { type: "lesson"; lesson: ReaderLesson }
+  | { type: "moral"; moralLesson: string; story: ReaderStory };
 
 export default function ChildReader() {
   const { id } = useParams<{ id: string }>();
@@ -22,10 +58,40 @@ export default function ChildReader() {
   const { data: story } = trpc.story.byId.useQuery({ id: storyId });
   const { data: lessons } = trpc.story.lessons.useQuery({ storyId });
   const { data: safetyHeaders } = trpc.safety.active.useQuery();
+  const { data: myProgress } = trpc.progress.myProgress.useQuery();
+  const utils = trpc.useUtils();
 
   const [currentPage, setCurrentPage] = useState(0);
+  const [resumedForStoryId, setResumedForStoryId] = useState<number | null>(null);
 
   useChildAuth();
+
+  const existingProgress = myProgress?.find((p) => p.storyId === storyId);
+  const saveProgress = trpc.progress.save.useMutation({
+    onSuccess: () => utils.progress.myProgress.invalidate(),
+  });
+  const toggleBookmark = trpc.progress.toggleBookmark.useMutation({
+    onSuccess: () => utils.progress.myProgress.invalidate(),
+  });
+
+  const pages: ReaderPage[] = useMemo(() => {
+    if (!story) return [];
+    const built: ReaderPage[] = [{ type: "cover", story }];
+    if (story.character) built.push({ type: "character", character: story.character });
+    for (const lesson of lessons ?? []) built.push({ type: "lesson", lesson });
+    if (story.moralLesson) built.push({ type: "moral", moralLesson: story.moralLesson, story });
+    return built;
+  }, [story, lessons]);
+
+  // Resume from the last saved page exactly once per story, as soon as
+  // progress has loaded. Adjusting state directly during render (rather than
+  // in an effect) is the React-recommended pattern for "sync state from a
+  // prop/data change" -- see https://react.dev/learn/you-might-not-need-an-effect.
+  if (resumedForStoryId !== storyId && myProgress && existingProgress && !existingProgress.isCompleted && pages.length > 0) {
+    setResumedForStoryId(storyId);
+    const resumeIndex = Math.min(existingProgress.lastPageIndex, pages.length - 1);
+    if (resumeIndex > 0) setCurrentPage(resumeIndex);
+  }
 
   if (!story) {
     return (
@@ -35,25 +101,18 @@ export default function ChildReader() {
     );
   }
 
-  // Build pages array
-  const pages: any[] = [
-    { type: "cover", story },
-  ];
-
-  if (story.character) {
-    pages.push({ type: "character", character: story.character });
-  }
-
-  (lessons || []).forEach((lesson) => {
-    pages.push({ type: "lesson", lesson });
-  });
-
-  if (story.moralLesson) {
-    pages.push({ type: "moral", moralLesson: story.moralLesson, story });
-  }
+  const saveCurrentProgress = (pageIndex: number) => {
+    const target = pages[pageIndex];
+    const lessonId = target?.type === "lesson" ? target.lesson.id : undefined;
+    saveProgress.mutate({ storyId, lessonId, pageIndex, totalPages: pages.length });
+  };
 
   const goNext = () => {
-    if (currentPage < pages.length - 1) setCurrentPage(p => p + 1);
+    if (currentPage < pages.length - 1) {
+      const next = currentPage + 1;
+      setCurrentPage(next);
+      saveCurrentProgress(next);
+    }
   };
 
   const goPrev = () => {
@@ -76,6 +135,14 @@ export default function ChildReader() {
             <span className="font-medium text-sm hidden sm:inline">{story.title}</span>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => toggleBookmark.mutate({ storyId })}
+              aria-label={existingProgress?.isBookmarked ? "Remove bookmark" : "Bookmark this story"}
+            >
+              <Bookmark className={`h-4 w-4 ${existingProgress?.isBookmarked ? "fill-amber-500 text-amber-500" : "text-gray-400"}`} />
+            </Button>
             <span className="text-sm text-gray-500">
               {currentPage + 1} / {pages.length}
             </span>
@@ -141,7 +208,10 @@ export default function ChildReader() {
                   {pages.map((_, i) => (
                     <button
                       key={i}
-                      onClick={() => setCurrentPage(i)}
+                      onClick={() => {
+                        setCurrentPage(i);
+                        saveCurrentProgress(i);
+                      }}
                       className={`w-2.5 h-2.5 rounded-full transition-all ${
                         i === currentPage
                           ? "bg-amber-500 w-6"
@@ -169,7 +239,7 @@ export default function ChildReader() {
   );
 }
 
-function CoverPage({ story }: { story: any }) {
+function CoverPage({ story }: { story: ReaderStory }) {
   return (
     <div className="h-full flex flex-col items-center justify-center text-center">
       <motion.div
@@ -239,7 +309,7 @@ function CoverPage({ story }: { story: any }) {
   );
 }
 
-function CharacterPage({ character }: { character: any }) {
+function CharacterPage({ character }: { character: ReaderCharacter }) {
   return (
     <div className="h-full flex flex-col items-center justify-center text-center">
       <motion.div
@@ -289,7 +359,7 @@ function CharacterPage({ character }: { character: any }) {
   );
 }
 
-function LessonPage({ lesson }: { lesson: any }) {
+function LessonPage({ lesson }: { lesson: ReaderLesson }) {
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center gap-2 mb-4">
@@ -350,7 +420,7 @@ function LessonPage({ lesson }: { lesson: any }) {
   );
 }
 
-function MoralPage({ moralLesson, story }: { moralLesson: string; story: any }) {
+function MoralPage({ moralLesson, story }: { moralLesson: string; story: ReaderStory }) {
   return (
     <div className="h-full flex flex-col items-center justify-center text-center">
       <motion.div

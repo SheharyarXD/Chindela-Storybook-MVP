@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { BookOpen, Delete, ArrowLeft } from "lucide-react";
 import { Link } from "react-router";
 import { Input } from "@/components/ui/input";
-import { trpc } from "@/providers/trpc";
+import { trpc } from "@/providers/trpcClient";
 
 export default function ChildLogin() {
   const navigate = useNavigate();

@@ -16,9 +16,7 @@ export function getStripe(): Stripe {
   return instance;
 }
 
-export const MONTHLY_PRICE_GBP_PENCE = 100; // £1.00
-
-export function computeCancelAt(durationMonths: 1 | 3 | 6 | 12): number {
+export function computeCancelAt(durationMonths: 1 | 2 | 3 | 6 | 12): number {
   const cancelAt = new Date();
   cancelAt.setMonth(cancelAt.getMonth() + durationMonths);
   return Math.floor(cancelAt.getTime() / 1000);

@@ -220,9 +220,12 @@ export const media = mysqlTable(
     filename: varchar("filename", { length: 255 }).notNull(),
     originalName: varchar("original_name", { length: 255 }).notNull(),
     mimeType: varchar("mime_type", { length: 100 }).notNull(),
+    // Canonical S3 object key -- the source of truth for deleting/replacing the
+    // underlying object. `url` is a derived public URL kept for direct rendering.
+    storageKey: varchar("storage_key", { length: 500 }).notNull().unique(),
     url: text("url").notNull(),
     size: bigint("size", { mode: "number" }),
-    type: mysqlEnum("type", ["image", "audio", "video"]).notNull(),
+    type: mysqlEnum("type", ["image", "audio", "video", "pdf", "document"]).notNull(),
     storyId: bigint("story_id", { mode: "number", unsigned: true }).references(() => stories.id, {
       onDelete: "set null",
     }),
@@ -285,18 +288,26 @@ export type DiaryEntry = typeof diaryEntries.$inferSelect;
 export type InsertDiaryEntry = typeof diaryEntries.$inferInsert;
 
 // ============== AI FEEDBACK ==============
+// One row per tutor attempt/conversation turn -- a child can resubmit a diary
+// entry after revising it, so this is intentionally 1:many against
+// diary_entries (attemptNumber orders the conversation for that entry).
 export const aiFeedback = mysqlTable(
   "ai_feedback",
   {
     id: serial("id").primaryKey(),
     entryId: bigint("entry_id", { mode: "number", unsigned: true })
       .notNull()
-      .unique()
       .references(() => diaryEntries.id, { onDelete: "cascade" }),
     childId: bigint("child_id", { mode: "number", unsigned: true })
       .notNull()
       .references(() => children.id, { onDelete: "cascade" }),
+    attemptNumber: int("attempt_number").default(1).notNull(),
+    // Snapshot of exactly what was submitted for this attempt -- the diary
+    // entry's own textContent may be edited again on a later attempt.
+    submittedText: text("submitted_text").notNull(),
     positiveFeedback: text("positive_feedback").notNull(),
+    mistakesExplained: text("mistakes_explained"),
+    hints: text("hints"),
     reflectionGuidance: text("reflection_guidance"),
     encouragement: text("encouragement"),
     safeSuggestions: text("safe_suggestions"),
@@ -304,7 +315,10 @@ export const aiFeedback = mysqlTable(
     isDelivered: boolean("is_delivered").default(false).notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },
-  (table) => [index("ai_feedback_child_id_idx").on(table.childId)],
+  (table) => [
+    index("ai_feedback_child_id_idx").on(table.childId),
+    index("ai_feedback_entry_id_idx").on(table.entryId),
+  ],
 );
 
 export type AIFeedback = typeof aiFeedback.$inferSelect;
@@ -365,7 +379,7 @@ export const subscriptions = mysqlTable(
     ageGroupId: bigint("age_group_id", { mode: "number", unsigned: true })
       .notNull()
       .references(() => ageGroups.id, { onDelete: "restrict" }),
-    duration: int("duration").notNull(), // 1, 3, 6, or 12 months
+    duration: int("duration").notNull(), // 1, 2, 3, 6, or 12 months -- see SubscriptionDurations
     pricePerMonth: decimal("price_per_month", { precision: 10, scale: 2 }).notNull(),
     totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
     currency: varchar("currency", { length: 10 }).default("GBP").notNull(),
@@ -421,6 +435,38 @@ export const payments = mysqlTable(
 export type Payment = typeof payments.$inferSelect;
 export type InsertPayment = typeof payments.$inferInsert;
 
+// ============== CONTRIBUTIONS ==============
+// Optional one-time donation a parent can add during subscription checkout.
+// Deliberately separate from `payments`/`subscriptions`: a contribution is not
+// entitlement-bearing and must keep being tracked even if the related
+// subscription is later cancelled or deleted.
+export const contributions = mysqlTable(
+  "contributions",
+  {
+    id: serial("id").primaryKey(),
+    parentId: bigint("parent_id", { mode: "number", unsigned: true })
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }), // financial record: never cascade-delete
+    subscriptionId: bigint("subscription_id", { mode: "number", unsigned: true }).references(() => subscriptions.id, {
+      onDelete: "set null",
+    }),
+    amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+    currency: varchar("currency", { length: 10 }).default("GBP").notNull(),
+    status: mysqlEnum("status", ["pending", "completed", "failed", "refunded"]).default("pending").notNull(),
+    stripeCheckoutSessionId: varchar("stripe_checkout_session_id", { length: 255 }),
+    stripePaymentIntentId: varchar("stripe_payment_intent_id", { length: 255 }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => [
+    index("contributions_parent_id_idx").on(table.parentId),
+    index("contributions_subscription_id_idx").on(table.subscriptionId),
+    index("contributions_status_idx").on(table.status),
+  ],
+);
+
+export type Contribution = typeof contributions.$inferSelect;
+export type InsertContribution = typeof contributions.$inferInsert;
+
 // ============== CHILD PROGRESS ==============
 export const childProgress = mysqlTable(
   "child_progress",
@@ -436,7 +482,9 @@ export const childProgress = mysqlTable(
       onDelete: "cascade",
     }),
     progress: int("progress").default(0).notNull(), // 0-100
+    lastPageIndex: int("last_page_index").default(0).notNull(), // exact page to resume on, within the reader's page array
     isCompleted: boolean("is_completed").default(false).notNull(),
+    isBookmarked: boolean("is_bookmarked").default(false).notNull(),
     completedAt: timestamp("completed_at"),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt")
@@ -453,3 +501,73 @@ export const childProgress = mysqlTable(
 
 export type ChildProgress = typeof childProgress.$inferSelect;
 export type InsertChildProgress = typeof childProgress.$inferInsert;
+
+// ============== SESSIONS ==============
+// One row per issued login (parent or child), independent of the stateless
+// JWT itself -- this is the revocation list that makes "logout everywhere",
+// per-session expiry, and device tracking possible without storing tokens.
+export const sessions = mysqlTable(
+  "sessions",
+  {
+    id: serial("id").primaryKey(),
+    userId: bigint("user_id", { mode: "number", unsigned: true }).references(() => users.id, { onDelete: "cascade" }),
+    childId: bigint("child_id", { mode: "number", unsigned: true }).references(() => children.id, { onDelete: "cascade" }),
+    // SHA-256 hex digest of the JWT's `sid` claim -- never the raw token/claim value.
+    tokenHash: varchar("token_hash", { length: 64 }).notNull().unique(),
+    userAgent: varchar("user_agent", { length: 500 }),
+    ipAddress: varchar("ip_address", { length: 100 }),
+    rememberMe: boolean("remember_me").default(false).notNull(),
+    lastSeenAt: timestamp("last_seen_at").defaultNow().notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    revokedAt: timestamp("revoked_at"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => [
+    index("sessions_user_id_idx").on(table.userId),
+    index("sessions_child_id_idx").on(table.childId),
+  ],
+);
+
+export type Session = typeof sessions.$inferSelect;
+export type InsertSession = typeof sessions.$inferInsert;
+
+// ============== AUDIT LOGS ==============
+export const auditLogs = mysqlTable(
+  "audit_logs",
+  {
+    id: serial("id").primaryKey(),
+    userId: bigint("user_id", { mode: "number", unsigned: true }).references(() => users.id, { onDelete: "set null" }),
+    childId: bigint("child_id", { mode: "number", unsigned: true }).references(() => children.id, { onDelete: "set null" }),
+    action: varchar("action", { length: 100 }).notNull(),
+    ipAddress: varchar("ip_address", { length: 100 }),
+    userAgent: varchar("user_agent", { length: 500 }),
+    metadata: text("metadata"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => [index("audit_logs_user_id_idx").on(table.userId), index("audit_logs_action_idx").on(table.action)],
+);
+
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type InsertAuditLog = typeof auditLogs.$inferInsert;
+
+// ============== VERIFICATION TOKENS ==============
+// Backs both email verification and password reset -- same lifecycle
+// (single-use, expiring, looked up by hash), differing only in `purpose`.
+export const verificationTokens = mysqlTable(
+  "verification_tokens",
+  {
+    id: serial("id").primaryKey(),
+    userId: bigint("user_id", { mode: "number", unsigned: true })
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    purpose: mysqlEnum("purpose", ["email_verification", "password_reset"]).notNull(),
+    tokenHash: varchar("token_hash", { length: 64 }).notNull().unique(),
+    expiresAt: timestamp("expires_at").notNull(),
+    usedAt: timestamp("used_at"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => [index("verification_tokens_user_id_idx").on(table.userId)],
+);
+
+export type VerificationToken = typeof verificationTokens.$inferSelect;
+export type InsertVerificationToken = typeof verificationTokens.$inferInsert;

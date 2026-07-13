@@ -1,5 +1,5 @@
 import { useNavigate, Link } from "react-router";
-import { trpc } from "@/providers/trpc";
+import { trpc } from "@/providers/trpcClient";
 import { useChildAuth } from "@/hooks/useChildAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,8 @@ import {
   Sparkles,
   LogOut,
   Shield,
+  RotateCw,
+  Bookmark,
 } from "lucide-react";
 
 export default function ChildDashboard() {
@@ -20,7 +22,11 @@ export default function ChildDashboard() {
   const { data: safetyHeaders } = trpc.safety.active.useQuery();
   const childSession = useChildAuth();
   const stories = trpc.story.list.useQuery(undefined, { enabled: !!childSession.data, retry: false });
+  const { data: progress } = trpc.progress.myProgress.useQuery(undefined, { enabled: !!childSession.data });
+  const { data: bookmarks } = trpc.progress.myBookmarks.useQuery(undefined, { enabled: !!childSession.data });
   const logout = trpc.auth.childLogout.useMutation({ onSuccess: () => navigate("/child-login") });
+
+  const continueReading = progress?.filter((p) => !p.isCompleted).slice(0, 3) ?? [];
 
   const handleLogout = () => {
     logout.mutate();
@@ -129,6 +135,54 @@ export default function ChildDashboard() {
             </Link>
           </motion.div>
         </div>
+
+        {/* Continue Reading */}
+        {continueReading.length > 0 && (
+          <motion.div initial="hidden" animate="visible" variants={fadeIn} custom={2.3} className="max-w-2xl mx-auto mb-12">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <RotateCw className="h-5 w-5 text-amber-500" />
+              Continue Reading
+            </h2>
+            <div className="space-y-3">
+              {continueReading.map((p) => (
+                <Link key={p.id} to={`/child/read/${p.storyId}`}>
+                  <Card className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-4 flex items-center gap-4">
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{p.story?.title ?? "Story"}</p>
+                        <div className="w-full bg-gray-100 rounded-full h-1.5 mt-2">
+                          <div className="bg-amber-500 h-1.5 rounded-full" style={{ width: `${p.progress}%` }} />
+                        </div>
+                      </div>
+                      <span className="text-xs text-gray-400">{p.progress}%</span>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Bookmarks */}
+        {bookmarks && bookmarks.length > 0 && (
+          <motion.div initial="hidden" animate="visible" variants={fadeIn} custom={2.6} className="max-w-2xl mx-auto mb-12">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <Bookmark className="h-5 w-5 text-amber-500 fill-amber-500" />
+              Your Bookmarks
+            </h2>
+            <div className="grid grid-cols-2 gap-3">
+              {bookmarks.map((b) => (
+                <Link key={b.id} to={`/child/read/${b.storyId}`}>
+                  <Card className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-4">
+                      <p className="font-medium text-sm truncate">{b.story?.title ?? "Story"}</p>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         {/* Characters */}
         <motion.div

@@ -2,15 +2,72 @@ import { z } from "zod";
 import { createRouter, authedQuery, childQuery } from "./middleware";
 import {
   findDiaryEntriesByChild,
+  findDiaryEntryById,
   createDiaryEntry,
   findAIFeedbackByChild,
+  findAIFeedbackByEntry,
+  findLatestAttemptNumber,
   findUndeliveredFeedback,
   createAIFeedback,
   markFeedbackAsDelivered,
 } from "./queries/diary";
 import { incrementChildStats } from "./queries/children";
 import { createNotification } from "./queries/notifications";
-import { generateTutorFeedback } from "./lib/gemini";
+import { generateTutorFeedback, fetchMediaAsBase64, guessMimeTypeFromUrl, type PriorAttempt } from "./lib/gemini";
+import { isOwnStorageUrl } from "./lib/storage";
+
+async function generateAndStoreFeedback(params: {
+  entryId: number;
+  childId: number;
+  childName: string;
+  characterName: string;
+  text: string;
+  imageUrl?: string;
+  audioUrl?: string;
+}) {
+  const priorRows = await findAIFeedbackByEntry(params.entryId);
+  const previousAttempts: PriorAttempt[] = priorRows.map((f) => ({
+    attemptNumber: f.attemptNumber,
+    submittedText: f.submittedText,
+    reflectionGuidance: f.reflectionGuidance,
+    hints: f.hints,
+  }));
+  const attemptNumber = (await findLatestAttemptNumber(params.entryId)) + 1;
+
+  const media = [];
+  for (const url of [params.imageUrl, params.audioUrl]) {
+    // Never let a child/parent-supplied URL make the server fetch arbitrary
+    // attacker-chosen hosts (SSRF) -- only ever fetch from our own S3 bucket,
+    // which is all that "attach a photo/recording to your diary entry" needs.
+    if (!url || !isOwnStorageUrl(url)) continue;
+    const mimeType = guessMimeTypeFromUrl(url);
+    if (!mimeType) continue;
+    const encoded = await fetchMediaAsBase64(url, mimeType);
+    if (encoded) media.push(encoded);
+  }
+
+  const feedback = await generateTutorFeedback({
+    entryText: params.text,
+    childName: params.childName,
+    characterName: params.characterName,
+    previousAttempts,
+    media,
+  });
+
+  return createAIFeedback({
+    entryId: params.entryId,
+    childId: params.childId,
+    attemptNumber,
+    submittedText: params.text,
+    positiveFeedback: feedback.positiveFeedback,
+    mistakesExplained: feedback.mistakesExplained,
+    hints: feedback.hints,
+    reflectionGuidance: feedback.reflectionGuidance,
+    encouragement: feedback.encouragement,
+    safeSuggestions: feedback.safeSuggestions,
+    characterName: feedback.characterName,
+  });
+}
 
 export const diaryRouter = createRouter({
   childEntries: childQuery.query(async ({ ctx }) => findDiaryEntriesByChild(ctx.child.id)),
@@ -55,24 +112,17 @@ export const diaryRouter = createRouter({
         entryDate: new Date(input.entryDate),
       });
 
-      // Increment child stats
-      await incrementChildStats(input.childId);
+      // Increment child stats (total entries + daily streak)
+      await incrementChildStats(input.childId, new Date(input.entryDate));
 
-      // Generate AI feedback
-      const feedback = await generateTutorFeedback(
-        input.textContent,
-        child.name,
-        child.favoriteCharacter || "Chindela"
-      );
-
-      await createAIFeedback({
+      await generateAndStoreFeedback({
         entryId: entry!.id,
         childId: input.childId,
-        positiveFeedback: feedback.positiveFeedback,
-        reflectionGuidance: feedback.reflectionGuidance,
-        encouragement: feedback.encouragement,
-        safeSuggestions: feedback.safeSuggestions,
-        characterName: feedback.characterName,
+        childName: child.name,
+        characterName: child.favoriteCharacter || "Chindela",
+        text: input.textContent,
+        imageUrl: input.imageUrl,
+        audioUrl: input.audioUrl,
       });
 
       // Create notification for parent
@@ -88,6 +138,54 @@ export const diaryRouter = createRouter({
       });
 
       return entry;
+    }),
+
+  // Revise and resubmit an existing entry for another round of tutor feedback.
+  // Tracks every attempt so the tutor (and the parent) can see improvement over time.
+  resubmit: childQuery
+    .input(
+      z.object({
+        entryId: z.number(),
+        textContent: z.string().trim().min(1).max(4_000),
+        imageUrl: z.string().optional(),
+        audioUrl: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const entry = await findDiaryEntryById(input.entryId);
+      if (!entry || entry.childId !== ctx.child.id) throw new Error("Unauthorized");
+
+      const { findChildById } = await import("./queries/children");
+      const child = await findChildById(ctx.child.id);
+      if (!child) throw new Error("Unauthorized");
+
+      const { updateDiaryEntryContent } = await import("./queries/diary");
+      await updateDiaryEntryContent(input.entryId, {
+        textContent: input.textContent,
+        imageUrl: input.imageUrl ?? entry.imageUrl ?? undefined,
+        audioUrl: input.audioUrl ?? entry.audioUrl ?? undefined,
+      });
+
+      const feedback = await generateAndStoreFeedback({
+        entryId: input.entryId,
+        childId: ctx.child.id,
+        childName: child.name,
+        characterName: child.favoriteCharacter || "Chindela",
+        text: input.textContent,
+        imageUrl: input.imageUrl ?? entry.imageUrl ?? undefined,
+        audioUrl: input.audioUrl ?? entry.audioUrl ?? undefined,
+      });
+
+      return feedback;
+    }),
+
+  // Full attempt/conversation history for one entry (child's own, or their parent's).
+  entryFeedback: childQuery
+    .input(z.object({ entryId: z.number() }))
+    .query(async ({ input, ctx }) => {
+      const entry = await findDiaryEntryById(input.entryId);
+      if (!entry || entry.childId !== ctx.child.id) throw new Error("Unauthorized");
+      return findAIFeedbackByEntry(input.entryId);
     }),
 
   // AI Feedback

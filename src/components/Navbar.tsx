@@ -12,7 +12,7 @@ import {
   Shield,
   Baby,
 } from "lucide-react";
-import { trpc } from "@/providers/trpc";
+import { trpc } from "@/providers/trpcClient";
 
 export default function Navbar() {
   const { user, isAuthenticated, isLoading, logout } = useAuth();

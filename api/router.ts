@@ -10,6 +10,8 @@ import { subscriptionRouter } from "./subscriptionRouter";
 import { contentYearRouter } from "./contentYearRouter";
 import { ageGroupRouter } from "./ageGroupRouter";
 import { adminRouter } from "./adminRouter";
+import { mediaRouter } from "./mediaRouter";
+import { progressRouter } from "./progressRouter";
 
 export const appRouter = createRouter({
   ping: publicQuery.query(() => ({ ok: true, ts: Date.now() })),
@@ -24,6 +26,8 @@ export const appRouter = createRouter({
   contentYear: contentYearRouter,
   ageGroup: ageGroupRouter,
   admin: adminRouter,
+  media: mediaRouter,
+  progress: progressRouter,
 });
 
 export type AppRouter = typeof appRouter;

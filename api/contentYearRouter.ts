@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { createRouter, publicQuery, adminQuery } from "./middleware";
 import {
   findAllContentYears,
@@ -6,6 +7,7 @@ import {
   findContentYearById,
   createContentYear,
   updateContentYear,
+  deleteContentYear,
 } from "./queries/contentYears";
 
 export const contentYearRouter = createRouter({
@@ -49,5 +51,19 @@ export const contentYearRouter = createRouter({
     .mutation(async ({ input }) => {
       const { id, ...data } = input;
       return updateContentYear(id, data);
+    }),
+
+  delete: adminQuery
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      try {
+        await deleteContentYear(input.id);
+      } catch {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "This content year still has stories linked to it. Reassign or delete those stories first.",
+        });
+      }
+      return { success: true };
     }),
 });

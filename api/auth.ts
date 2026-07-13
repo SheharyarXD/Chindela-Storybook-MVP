@@ -8,8 +8,8 @@ import { env } from "./lib/env";
 const scrypt = promisify(scryptCallback);
 const secret = new TextEncoder().encode(env.sessionSecret);
 
-export type ParentSession = { type: "parent"; userId: number; role: "admin" | "parent" };
-export type ChildSession = { type: "child"; childId: number; parentId: number };
+export type ParentSession = { type: "parent"; userId: number; role: "admin" | "parent"; sid: string };
+export type ChildSession = { type: "child"; childId: number; parentId: number; sid: string };
 
 export async function hashSecret(value: string) {
   const salt = randomBytes(16).toString("hex");
@@ -25,15 +25,25 @@ export async function verifySecret(value: string, stored: string) {
   return expected.length === actual.length && timingSafeEqual(expected, actual);
 }
 
-async function sign(claim: ParentSession | ChildSession) {
-  return new jose.SignJWT(claim).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("12h").sign(secret);
+async function sign(claim: ParentSession | ChildSession, expiresIn: string) {
+  return new jose.SignJWT(claim).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime(expiresIn).sign(secret);
 }
 
-export async function createParentToken(userId: number, role: ParentSession["role"]) {
-  return sign({ type: "parent", userId, role });
+// A fresh random session id, embedded in the JWT and (hashed) stored as the
+// sessions table's lookup key -- this is what makes revocation/"logout
+// everywhere"/device tracking possible despite the token itself being stateless.
+export function newSid(): string {
+  return randomBytes(16).toString("hex");
 }
-export async function createChildToken(childId: number, parentId: number) {
-  return sign({ type: "child", childId, parentId });
+
+export const REMEMBER_ME_EXPIRY = "30d";
+export const DEFAULT_EXPIRY = "12h";
+
+export async function createParentToken(userId: number, role: ParentSession["role"], sid: string, rememberMe = false) {
+  return sign({ type: "parent", userId, role, sid }, rememberMe ? REMEMBER_ME_EXPIRY : DEFAULT_EXPIRY);
+}
+export async function createChildToken(childId: number, parentId: number, sid: string) {
+  return sign({ type: "child", childId, parentId, sid }, DEFAULT_EXPIRY);
 }
 
 async function verify<T>(token?: string): Promise<T | undefined> {

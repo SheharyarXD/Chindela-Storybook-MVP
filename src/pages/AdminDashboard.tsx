@@ -1,5 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
-import { trpc } from "@/providers/trpc";
+import { trpc } from "@/providers/trpcClient";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +31,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   BookOpen,
@@ -45,7 +45,21 @@ import {
   MessageSquare,
   Layers,
   Calendar,
+  Image as ImageIcon,
+  Music,
+  Video,
+  FileText,
+  File as FileIcon,
+  Heart,
+  ChevronLeft,
+  ChevronRight,
+  PoundSterling,
+  RefreshCw,
+  Loader2,
 } from "lucide-react";
+import { MediaUploader } from "@/components/admin/MediaUploader";
+import { uploadToPresignedPost } from "@/lib/s3Upload";
+import { MediaCategories, SUBSCRIPTION_PRICE_PER_MONTH_GBP_PENCE, type MediaCategory } from "@contracts/constants";
 
 export default function AdminDashboard() {
   const { isLoading } = useAuth();
@@ -75,12 +89,16 @@ export default function AdminDashboard() {
           </div>
 
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6 lg:w-auto">
+            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 lg:grid-cols-10 lg:w-auto h-auto">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="stories">Stories</TabsTrigger>
+              <TabsTrigger value="lessons">Lessons</TabsTrigger>
               <TabsTrigger value="characters">Characters</TabsTrigger>
+              <TabsTrigger value="media">Media</TabsTrigger>
+              <TabsTrigger value="ageGroups">Age Groups</TabsTrigger>
               <TabsTrigger value="safety">Safety</TabsTrigger>
               <TabsTrigger value="years">Years</TabsTrigger>
+              <TabsTrigger value="subscriptions">Billing</TabsTrigger>
               <TabsTrigger value="users">Users</TabsTrigger>
             </TabsList>
 
@@ -90,14 +108,26 @@ export default function AdminDashboard() {
             <TabsContent value="stories">
               <StoriesTab />
             </TabsContent>
+            <TabsContent value="lessons">
+              <LessonsTab />
+            </TabsContent>
             <TabsContent value="characters">
               <CharactersTab />
+            </TabsContent>
+            <TabsContent value="media">
+              <MediaTab />
+            </TabsContent>
+            <TabsContent value="ageGroups">
+              <AgeGroupsTab />
             </TabsContent>
             <TabsContent value="safety">
               <SafetyTab />
             </TabsContent>
             <TabsContent value="years">
               <YearsTab />
+            </TabsContent>
+            <TabsContent value="subscriptions">
+              <BillingTab />
             </TabsContent>
             <TabsContent value="users">
               <UsersTab />
@@ -239,6 +269,7 @@ function StoriesTab() {
     dayNumber: "1",
     theme: "",
     moralLesson: "",
+    coverImage: "",
   });
 
   const createMutation = trpc.story.create.useMutation({
@@ -272,6 +303,7 @@ function StoriesTab() {
       dayNumber: "1",
       theme: "",
       moralLesson: "",
+      coverImage: "",
     });
   };
 
@@ -285,6 +317,7 @@ function StoriesTab() {
       dayNumber: parseInt(form.dayNumber),
       theme: form.theme || undefined,
       moralLesson: form.moralLesson || undefined,
+      coverImage: form.coverImage || undefined,
     };
 
     if (editingId) {
@@ -294,7 +327,18 @@ function StoriesTab() {
     }
   };
 
-  const startEdit = (story: any) => {
+  const startEdit = (story: {
+    id: number;
+    title: string;
+    description?: string | null;
+    ageGroupId?: number | null;
+    contentYearId?: number | null;
+    characterId?: number | null;
+    dayNumber?: number | null;
+    theme?: string | null;
+    moralLesson?: string | null;
+    coverImage?: string | null;
+  }) => {
     setEditingId(story.id);
     setForm({
       title: story.title,
@@ -305,6 +349,7 @@ function StoriesTab() {
       dayNumber: story.dayNumber?.toString() || "1",
       theme: story.theme || "",
       moralLesson: story.moralLesson || "",
+      coverImage: story.coverImage || "",
     });
     setIsDialogOpen(true);
   };
@@ -341,6 +386,12 @@ function StoriesTab() {
                   placeholder="Short description"
                 />
               </div>
+              <MediaUploader
+                category="image"
+                label="Cover Image"
+                value={form.coverImage}
+                onChange={(url) => setForm({ ...form, coverImage: url })}
+              />
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Age Group</Label>
@@ -452,7 +503,18 @@ function StoriesTab() {
             <TableBody>
               {stories?.map((story) => (
                 <TableRow key={story.id}>
-                  <TableCell className="font-medium">{story.title}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      {story.coverImage ? (
+                        <img src={story.coverImage} alt="" className="h-8 w-8 rounded object-cover" />
+                      ) : (
+                        <div className="h-8 w-8 rounded bg-gray-100 flex items-center justify-center">
+                          <ImageIcon className="h-4 w-4 text-gray-300" />
+                        </div>
+                      )}
+                      {story.title}
+                    </div>
+                  </TableCell>
                   <TableCell>{story.ageGroup?.name}</TableCell>
                   <TableCell>Day {story.dayNumber}</TableCell>
                   <TableCell>
@@ -495,22 +557,31 @@ function CharactersTab() {
   const [isOpen, setIsOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState({
-    name: "", slug: "", description: "", personality: "", catchphrase: "", color: "#FFB347",
+    name: "", slug: "", description: "", personality: "", catchphrase: "", color: "#FFB347", imageUrl: "",
   });
 
   const createMutation = trpc.character.create.useMutation({
     onSuccess: () => {
       utils.character.list.invalidate();
       setIsOpen(false);
-      setForm({ name: "", slug: "", description: "", personality: "", catchphrase: "", color: "#FFB347" });
+      setForm({ name: "", slug: "", description: "", personality: "", catchphrase: "", color: "#FFB347", imageUrl: "" });
     },
   });
   const updateMutation = trpc.character.update.useMutation({ onSuccess: () => { utils.character.list.invalidate(); setIsOpen(false); setEditingId(null); } });
   const deleteMutation = trpc.character.delete.useMutation({ onSuccess: () => utils.character.list.invalidate() });
-  const resetForm = () => setForm({ name: "", slug: "", description: "", personality: "", catchphrase: "", color: "#FFB347" });
-  const edit = (character: any) => {
+  const resetForm = () => setForm({ name: "", slug: "", description: "", personality: "", catchphrase: "", color: "#FFB347", imageUrl: "" });
+  const edit = (character: {
+    id: number;
+    name: string;
+    slug: string;
+    description?: string | null;
+    personality?: string | null;
+    catchphrase?: string | null;
+    color?: string | null;
+    imageUrl?: string | null;
+  }) => {
     setEditingId(character.id);
-    setForm({ name: character.name, slug: character.slug, description: character.description || "", personality: character.personality || "", catchphrase: character.catchphrase || "", color: character.color || "#FFB347" });
+    setForm({ name: character.name, slug: character.slug, description: character.description || "", personality: character.personality || "", catchphrase: character.catchphrase || "", color: character.color || "#FFB347", imageUrl: character.imageUrl || "" });
     setIsOpen(true);
   };
 
@@ -531,6 +602,7 @@ function CharactersTab() {
               <Textarea placeholder="Personality" value={form.personality} onChange={(e) => setForm({ ...form, personality: e.target.value })} />
               <Input placeholder="Catchphrase" value={form.catchphrase} onChange={(e) => setForm({ ...form, catchphrase: e.target.value })} />
               <Input type="color" value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} />
+              <MediaUploader category="image" label="Character Image" value={form.imageUrl} onChange={(url) => setForm({ ...form, imageUrl: url })} />
               <Button onClick={() => editingId ? updateMutation.mutate({ id: editingId, ...form }) : createMutation.mutate(form)} disabled={!form.name || !form.slug || createMutation.isPending || updateMutation.isPending} className="w-full">
                 {editingId ? "Save Character" : "Create Character"}
               </Button>
@@ -663,6 +735,7 @@ function YearsTab() {
     },
   });
   const updateMutation = trpc.contentYear.update.useMutation({ onSuccess: () => utils.contentYear.list.invalidate() });
+  const deleteMutation = trpc.contentYear.delete.useMutation({ onSuccess: () => utils.contentYear.list.invalidate() });
 
   return (
     <div className="space-y-4">
@@ -699,8 +772,14 @@ function YearsTab() {
               </Badge>
               <div className="mt-3 flex items-center justify-between">
                 <Switch checked={y.isActive} onCheckedChange={(isActive) => updateMutation.mutate({ id: y.id, isActive })} aria-label={`Toggle ${y.label}`} />
-                <Button variant="ghost" size="sm" onClick={() => { setEditingId(y.id); setYear(String(y.year)); setLabel(y.label); setIsOpen(true); }} aria-label={`Edit ${y.label}`}><Pencil className="h-4 w-4" /></Button>
+                <div className="flex gap-1">
+                  <Button variant="ghost" size="sm" onClick={() => { setEditingId(y.id); setYear(String(y.year)); setLabel(y.label); setIsOpen(true); }} aria-label={`Edit ${y.label}`}><Pencil className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="sm" onClick={() => deleteMutation.mutate({ id: y.id })} aria-label={`Delete ${y.label}`}><Trash2 className="h-4 w-4 text-red-500" /></Button>
+                </div>
               </div>
+              {deleteMutation.error && deleteMutation.variables?.id === y.id && (
+                <p className="text-xs text-red-600 mt-2">{deleteMutation.error.message}</p>
+              )}
             </CardContent>
           </Card>
         )) || (
@@ -749,6 +828,687 @@ function UsersTab() {
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-gray-500 py-8">
                     No children registered yet.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ============== MEDIA TAB ==============
+const mediaTypeIcons: Record<MediaCategory, typeof ImageIcon> = {
+  image: ImageIcon,
+  audio: Music,
+  video: Video,
+  pdf: FileText,
+  document: FileIcon,
+};
+
+function MediaTab() {
+  const [type, setType] = useState<string>("all");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [uploadCategory, setUploadCategory] = useState<MediaCategory>("image");
+  const pageSize = 12;
+  const utils = trpc.useUtils();
+
+  const { data } = trpc.media.list.useQuery({
+    type: type === "all" ? undefined : (type as MediaCategory),
+    search: search || undefined,
+    page,
+    pageSize,
+  });
+  const deleteMutation = trpc.media.delete.useMutation({ onSuccess: () => utils.media.list.invalidate() });
+
+  const totalPages = data ? Math.max(1, Math.ceil(data.total / pageSize)) : 1;
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-xl font-semibold">Media Library</h2>
+
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="w-40">
+              <Label className="text-xs">Upload as</Label>
+              <Select value={uploadCategory} onValueChange={(v) => setUploadCategory(v as MediaCategory)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {MediaCategories.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex-1 min-w-[240px]">
+              {/* key resets the uploader's internal preview after each successful upload */}
+              <MediaUploader
+                key={uploadCategory}
+                category={uploadCategory}
+                onChange={() => utils.media.list.invalidate()}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="flex flex-wrap gap-3 items-center">
+        <Select
+          value={type}
+          onValueChange={(v) => {
+            setType(v);
+            setPage(1);
+          }}
+        >
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All types</SelectItem>
+            {MediaCategories.map((c) => (
+              <SelectItem key={c} value={c}>
+                {c}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Input
+          placeholder="Search filename..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
+          className="max-w-xs"
+        />
+      </div>
+
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {data?.items.map((item) => {
+          const Icon = mediaTypeIcons[item.type as MediaCategory] ?? FileIcon;
+          return (
+            <Card key={item.id} className="overflow-hidden">
+              <div className="h-28 bg-gray-100 flex items-center justify-center">
+                {item.type === "image" ? (
+                  <img src={item.url} alt={item.originalName} className="h-full w-full object-cover" />
+                ) : item.type === "video" ? (
+                  <video src={item.url} className="h-full w-full object-cover" muted />
+                ) : (
+                  <Icon className="h-10 w-10 text-gray-400" />
+                )}
+              </div>
+              <CardContent className="p-3 space-y-2">
+                <p className="text-xs font-medium truncate" title={item.originalName}>
+                  {item.originalName}
+                </p>
+                <p className="text-[11px] text-gray-400">
+                  {item.size ? `${(item.size / 1024).toFixed(0)} KB` : ""} · {new Date(item.createdAt).toLocaleDateString()}
+                </p>
+                {item.type === "audio" && <audio src={item.url} controls className="w-full h-8" />}
+                <div className="flex justify-between items-center pt-1">
+                  <ReplaceMediaButton item={item} />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => deleteMutation.mutate({ id: item.id })}
+                    aria-label={`Delete ${item.originalName}`}
+                  >
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        }) || <p className="text-gray-500 col-span-4 text-center py-8">No media uploaded yet.</p>}
+      </div>
+
+      {data && data.total > pageSize && (
+        <div className="flex items-center justify-center gap-3">
+          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <p className="text-sm text-gray-500">
+            Page {page} of {totalPages}
+          </p>
+          <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ReplaceMediaButton({ item }: { item: { id: number; type: MediaCategory; originalName: string } }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const utils = trpc.useUtils();
+  const requestUpload = trpc.media.requestUpload.useMutation();
+  const replaceMutation = trpc.media.replace.useMutation({ onSuccess: () => utils.media.list.invalidate() });
+
+  const handleFile = async (file: File) => {
+    setIsUploading(true);
+    try {
+      const { uploadUrl, fields, key } = await requestUpload.mutateAsync({
+        category: item.type,
+        filename: file.name,
+        mimeType: file.type,
+        size: file.size,
+      });
+      await uploadToPresignedPost(uploadUrl, fields, file);
+      await replaceMutation.mutateAsync({
+        id: item.id,
+        key,
+        category: item.type,
+        originalName: file.name,
+        mimeType: file.type,
+        size: file.size,
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  return (
+    <>
+      <input
+        ref={inputRef}
+        type="file"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleFile(file);
+          e.target.value = "";
+        }}
+      />
+      <Button
+        variant="ghost"
+        size="sm"
+        disabled={isUploading}
+        onClick={() => inputRef.current?.click()}
+        aria-label={`Replace ${item.originalName}`}
+      >
+        {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+      </Button>
+    </>
+  );
+}
+
+// ============== LESSONS TAB ==============
+function LessonsTab() {
+  const { data: stories } = trpc.story.list.useQuery();
+  const [selectedStoryId, setSelectedStoryId] = useState<string>("");
+  const { data: lessons } = trpc.story.lessons.useQuery(
+    { storyId: parseInt(selectedStoryId) },
+    { enabled: !!selectedStoryId }
+  );
+  const utils = trpc.useUtils();
+  const [isOpen, setIsOpen] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [form, setForm] = useState({
+    title: "",
+    content: "",
+    pageNumber: "1",
+    imageUrl: "",
+    audioUrl: "",
+    characterDialogue: "",
+    interactiveElement: "",
+  });
+
+  const invalidateLessons = () => utils.story.lessons.invalidate({ storyId: parseInt(selectedStoryId) });
+
+  const createMutation = trpc.story.createLesson.useMutation({
+    onSuccess: () => {
+      invalidateLessons();
+      setIsOpen(false);
+      resetForm();
+    },
+  });
+  const updateMutation = trpc.story.updateLesson.useMutation({
+    onSuccess: () => {
+      invalidateLessons();
+      setIsOpen(false);
+      setEditingId(null);
+      resetForm();
+    },
+  });
+  const deleteMutation = trpc.story.deleteLesson.useMutation({ onSuccess: () => invalidateLessons() });
+
+  const resetForm = () =>
+    setForm({ title: "", content: "", pageNumber: "1", imageUrl: "", audioUrl: "", characterDialogue: "", interactiveElement: "" });
+
+  const handleSubmit = () => {
+    const data = {
+      title: form.title,
+      content: form.content,
+      pageNumber: parseInt(form.pageNumber),
+      imageUrl: form.imageUrl || undefined,
+      audioUrl: form.audioUrl || undefined,
+      characterDialogue: form.characterDialogue || undefined,
+      interactiveElement: form.interactiveElement || undefined,
+    };
+    if (editingId) updateMutation.mutate({ id: editingId, ...data });
+    else createMutation.mutate({ storyId: parseInt(selectedStoryId), ...data });
+  };
+
+  const edit = (lesson: {
+    id: number;
+    title: string;
+    content: string;
+    pageNumber: number;
+    imageUrl?: string | null;
+    audioUrl?: string | null;
+    characterDialogue?: string | null;
+    interactiveElement?: string | null;
+  }) => {
+    setEditingId(lesson.id);
+    setForm({
+      title: lesson.title,
+      content: lesson.content,
+      pageNumber: String(lesson.pageNumber),
+      imageUrl: lesson.imageUrl || "",
+      audioUrl: lesson.audioUrl || "",
+      characterDialogue: lesson.characterDialogue || "",
+      interactiveElement: lesson.interactiveElement || "",
+    });
+    setIsOpen(true);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row justify-between gap-4 sm:items-center">
+        <h2 className="text-xl font-semibold">Lessons</h2>
+        <div className="flex gap-3 items-center">
+          <Select value={selectedStoryId} onValueChange={setSelectedStoryId}>
+            <SelectTrigger className="w-64">
+              <SelectValue placeholder="Select a story" />
+            </SelectTrigger>
+            <SelectContent>
+              {stories?.map((s) => (
+                <SelectItem key={s.id} value={s.id.toString()}>
+                  {s.title} (Day {s.dayNumber})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+              <Button
+                disabled={!selectedStoryId}
+                onClick={() => {
+                  resetForm();
+                  setEditingId(null);
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Lesson
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{editingId ? "Edit Lesson" : "Create Lesson"}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div>
+                  <Label>Title</Label>
+                  <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+                </div>
+                <div>
+                  <Label>Page Number</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={form.pageNumber}
+                    onChange={(e) => setForm({ ...form, pageNumber: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Content</Label>
+                  <Textarea
+                    value={form.content}
+                    onChange={(e) => setForm({ ...form, content: e.target.value })}
+                    placeholder="Page content"
+                  />
+                </div>
+                <div>
+                  <Label>Character Dialogue</Label>
+                  <Textarea
+                    value={form.characterDialogue}
+                    onChange={(e) => setForm({ ...form, characterDialogue: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Interactive Element</Label>
+                  <Select value={form.interactiveElement} onValueChange={(v) => setForm({ ...form, interactiveElement: v })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="None" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="quiz">Quiz</SelectItem>
+                      <SelectItem value="activity">Activity</SelectItem>
+                      <SelectItem value="reflection">Reflection</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <MediaUploader
+                  category="image"
+                  label="Page Image"
+                  value={form.imageUrl}
+                  onChange={(url) => setForm({ ...form, imageUrl: url })}
+                />
+                <MediaUploader
+                  category="audio"
+                  label="Narration Audio"
+                  value={form.audioUrl}
+                  onChange={(url) => setForm({ ...form, audioUrl: url })}
+                />
+                <Button onClick={handleSubmit} disabled={!form.title || !form.content} className="w-full">
+                  {editingId ? "Update" : "Create"} Lesson
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+
+      {!selectedStoryId ? (
+        <Card className="p-8 text-center text-gray-500">Select a story to manage its lessons.</Card>
+      ) : (
+        <div className="space-y-3">
+          {[...(lessons ?? [])]
+            .sort((a, b) => a.pageNumber - b.pageNumber)
+            .map((lesson) => (
+              <Card key={lesson.id}>
+                <CardContent className="p-4 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    {lesson.imageUrl ? (
+                      <img src={lesson.imageUrl} alt="" className="h-10 w-10 rounded object-cover" />
+                    ) : (
+                      <div className="h-10 w-10 rounded bg-gray-100 flex items-center justify-center">
+                        <ImageIcon className="h-4 w-4 text-gray-300" />
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-medium text-sm">
+                        Page {lesson.pageNumber}: {lesson.title}
+                      </p>
+                      <p className="text-xs text-gray-500 line-clamp-1">{lesson.content}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    <Button variant="ghost" size="sm" onClick={() => edit(lesson)} aria-label={`Edit ${lesson.title}`}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deleteMutation.mutate({ id: lesson.id })}
+                      aria-label={`Delete ${lesson.title}`}
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          {selectedStoryId && lessons?.length === 0 && (
+            <p className="text-gray-500 text-center py-8">No lessons yet for this story.</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============== AGE GROUPS TAB ==============
+function AgeGroupsTab() {
+  const { data: ageGroups } = trpc.ageGroup.list.useQuery();
+  const utils = trpc.useUtils();
+  const [isOpen, setIsOpen] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [form, setForm] = useState({ name: "", minAge: "", maxAge: "", description: "", color: "#FFB347" });
+
+  const createMutation = trpc.ageGroup.create.useMutation({
+    onSuccess: () => {
+      utils.ageGroup.list.invalidate();
+      setIsOpen(false);
+      resetForm();
+    },
+  });
+  const updateMutation = trpc.ageGroup.update.useMutation({
+    onSuccess: () => {
+      utils.ageGroup.list.invalidate();
+      setIsOpen(false);
+      setEditingId(null);
+      resetForm();
+    },
+  });
+  const deleteMutation = trpc.ageGroup.delete.useMutation({ onSuccess: () => utils.ageGroup.list.invalidate() });
+
+  const resetForm = () => setForm({ name: "", minAge: "", maxAge: "", description: "", color: "#FFB347" });
+  const edit = (ag: {
+    id: number;
+    name: string;
+    minAge: number;
+    maxAge: number;
+    description?: string | null;
+    color?: string | null;
+  }) => {
+    setEditingId(ag.id);
+    setForm({
+      name: ag.name,
+      minAge: String(ag.minAge),
+      maxAge: String(ag.maxAge),
+      description: ag.description || "",
+      color: ag.color || "#FFB347",
+    });
+    setIsOpen(true);
+  };
+  const handleSubmit = () => {
+    const data = {
+      name: form.name,
+      minAge: parseInt(form.minAge),
+      maxAge: parseInt(form.maxAge),
+      description: form.description || undefined,
+      color: form.color,
+    };
+    if (editingId) updateMutation.mutate({ id: editingId, ...data });
+    else createMutation.mutate(data);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">Age Groups</h2>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogTrigger asChild>
+            <Button
+              onClick={() => {
+                resetForm();
+                setEditingId(null);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Age Group
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{editingId ? "Edit Age Group" : "Create Age Group"}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <Input placeholder="Name (e.g., 5-7 years)" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <div className="grid grid-cols-2 gap-4">
+                <Input type="number" placeholder="Min Age" value={form.minAge} onChange={(e) => setForm({ ...form, minAge: e.target.value })} />
+                <Input type="number" placeholder="Max Age" value={form.maxAge} onChange={(e) => setForm({ ...form, maxAge: e.target.value })} />
+              </div>
+              <Textarea placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+              <Input type="color" value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} />
+              <Button onClick={handleSubmit} disabled={!form.name || !form.minAge || !form.maxAge} className="w-full">
+                {editingId ? "Save" : "Create"} Age Group
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <p className="text-sm text-gray-500 -mt-2">
+        Subscription pricing is flat across every age group (£{(SUBSCRIPTION_PRICE_PER_MONTH_GBP_PENCE / 100).toFixed(2)}/month) —
+        age groups control content targeting only, not price.
+      </p>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {ageGroups?.map((ag) => (
+          <Card key={ag.id} className="overflow-hidden">
+            <div className="h-2" style={{ backgroundColor: ag.color || "#FFB347" }} />
+            <CardContent className="p-6">
+              <h3 className="font-semibold text-lg">{ag.name}</h3>
+              <p className="text-sm text-gray-500 mb-2">
+                Ages {ag.minAge}-{ag.maxAge}
+              </p>
+              <p className="text-sm text-gray-600">{ag.description}</p>
+              <div className="mt-3 flex justify-end gap-1">
+                <Button variant="ghost" size="sm" onClick={() => edit(ag)} aria-label={`Edit ${ag.name}`}>
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => deleteMutation.mutate({ id: ag.id })} aria-label={`Delete ${ag.name}`}>
+                  <Trash2 className="h-4 w-4 text-red-500" />
+                </Button>
+              </div>
+              {deleteMutation.error && deleteMutation.variables?.id === ag.id && (
+                <p className="text-xs text-red-600 mt-2">{deleteMutation.error.message}</p>
+              )}
+            </CardContent>
+          </Card>
+        )) || <p className="text-gray-500 col-span-3 text-center py-8">No age groups yet.</p>}
+      </div>
+    </div>
+  );
+}
+
+// ============== BILLING TAB (SUBSCRIPTIONS, PAYMENTS, CONTRIBUTIONS) ==============
+function BillingTab() {
+  const { data: subs } = trpc.admin.allSubscriptions.useQuery();
+  const { data: contributions } = trpc.admin.allContributions.useQuery();
+  const { data: stats } = trpc.admin.contributionStats.useQuery();
+
+  const activeCount = subs?.filter((s) => s.status === "active").length ?? 0;
+  const totalRevenue = subs?.reduce((sum, s) => sum + Number(s.totalPrice), 0) ?? 0;
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-xl font-semibold">Billing</h2>
+
+      <div className="grid sm:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-sm text-gray-500">Active Subscriptions</p>
+            <p className="text-3xl font-bold mt-1">{activeCount}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-sm text-gray-500">Subscription Revenue</p>
+            <p className="text-3xl font-bold mt-1 flex items-center gap-1">
+              <PoundSterling className="h-6 w-6" />
+              {totalRevenue.toFixed(2)}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-sm text-gray-500 flex items-center gap-1">
+              <Heart className="h-4 w-4 text-rose-400" />
+              Total Contributions
+            </p>
+            <p className="text-3xl font-bold mt-1 flex items-center gap-1">
+              <PoundSterling className="h-6 w-6" />
+              {(stats?.totalAmount ?? 0).toFixed(2)}
+            </p>
+            <p className="text-xs text-gray-400">{stats?.count ?? 0} contribution(s)</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Subscriptions</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Parent</TableHead>
+                <TableHead>Child</TableHead>
+                <TableHead>Age Group</TableHead>
+                <TableHead>Duration</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {subs?.map((s) => (
+                <TableRow key={s.id}>
+                  <TableCell>{s.parent?.name || s.parent?.email}</TableCell>
+                  <TableCell>{s.child?.name}</TableCell>
+                  <TableCell>{s.ageGroup?.name}</TableCell>
+                  <TableCell>{s.duration} mo</TableCell>
+                  <TableCell>£{s.totalPrice}</TableCell>
+                  <TableCell>
+                    <Badge variant={s.status === "active" ? "default" : "secondary"}>{s.status}</Badge>
+                  </TableCell>
+                </TableRow>
+              )) || (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-gray-500 py-8">
+                    No subscriptions yet.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Heart className="h-5 w-5 text-rose-400" />
+            Contribution History
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Parent</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {contributions?.map((c) => (
+                <TableRow key={c.id}>
+                  <TableCell>{c.parent?.name || c.parent?.email}</TableCell>
+                  <TableCell>£{c.amount}</TableCell>
+                  <TableCell>
+                    <Badge variant={c.status === "completed" ? "default" : "secondary"}>{c.status}</Badge>
+                  </TableCell>
+                  <TableCell>{new Date(c.createdAt).toLocaleDateString()}</TableCell>
+                </TableRow>
+              )) || (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-gray-500 py-8">
+                    No contributions yet.
                   </TableCell>
                 </TableRow>
               )}

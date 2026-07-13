@@ -13,8 +13,12 @@ import {
   notifications,
   subscriptions,
   payments,
+  contributions,
   contentYears,
   childProgress,
+  sessions,
+  auditLogs,
+  verificationTokens,
 } from "./schema";
 
 // ============== USER RELATIONS ==============
@@ -22,7 +26,28 @@ export const usersRelations = relations(users, ({ many }) => ({
   children: many(children),
   subscriptions: many(subscriptions),
   payments: many(payments),
+  contributions: many(contributions),
   media: many(media),
+  sessions: many(sessions),
+  auditLogs: many(auditLogs),
+  verificationTokens: many(verificationTokens),
+}));
+
+// ============== SESSION RELATIONS ==============
+export const sessionsRelations = relations(sessions, ({ one }) => ({
+  user: one(users, { fields: [sessions.userId], references: [users.id] }),
+  child: one(children, { fields: [sessions.childId], references: [children.id] }),
+}));
+
+// ============== AUDIT LOG RELATIONS ==============
+export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
+  user: one(users, { fields: [auditLogs.userId], references: [users.id] }),
+  child: one(children, { fields: [auditLogs.childId], references: [children.id] }),
+}));
+
+// ============== VERIFICATION TOKEN RELATIONS ==============
+export const verificationTokensRelations = relations(verificationTokens, ({ one }) => ({
+  user: one(users, { fields: [verificationTokens.userId], references: [users.id] }),
 }));
 
 // ============== AGE GROUP RELATIONS ==============
@@ -47,6 +72,8 @@ export const childrenRelations = relations(children, ({ one, many }) => ({
   aiFeedback: many(aiFeedback),
   subscriptions: many(subscriptions),
   progress: many(childProgress),
+  sessions: many(sessions),
+  auditLogs: many(auditLogs),
 }));
 
 // ============== CONTENT YEAR RELATIONS ==============
@@ -116,7 +143,7 @@ export const mediaRelations = relations(media, ({ one }) => ({
 }));
 
 // ============== DIARY ENTRY RELATIONS ==============
-export const diaryEntriesRelations = relations(diaryEntries, ({ one }) => ({
+export const diaryEntriesRelations = relations(diaryEntries, ({ one, many }) => ({
   child: one(children, {
     fields: [diaryEntries.childId],
     references: [children.id],
@@ -129,6 +156,7 @@ export const diaryEntriesRelations = relations(diaryEntries, ({ one }) => ({
     fields: [diaryEntries.lessonId],
     references: [lessons.id],
   }),
+  aiFeedback: many(aiFeedback),
 }));
 
 // ============== AI FEEDBACK RELATIONS ==============
@@ -166,6 +194,7 @@ export const subscriptionsRelations = relations(subscriptions, ({ one, many }) =
     references: [ageGroups.id],
   }),
   payments: many(payments),
+  contributions: many(contributions),
 }));
 
 // ============== PAYMENT RELATIONS ==============
@@ -177,6 +206,18 @@ export const paymentsRelations = relations(payments, ({ one }) => ({
   parent: one(users, {
     fields: [payments.parentId],
     references: [users.id],
+  }),
+}));
+
+// ============== CONTRIBUTION RELATIONS ==============
+export const contributionsRelations = relations(contributions, ({ one }) => ({
+  parent: one(users, {
+    fields: [contributions.parentId],
+    references: [users.id],
+  }),
+  subscription: one(subscriptions, {
+    fields: [contributions.subscriptionId],
+    references: [subscriptions.id],
   }),
 }));
 

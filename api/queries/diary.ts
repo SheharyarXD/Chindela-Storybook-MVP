@@ -39,6 +39,14 @@ export async function markEntryAsRead(id: number) {
     .where(eq(schema.diaryEntries.id, id));
 }
 
+export async function updateDiaryEntryContent(
+  id: number,
+  data: Pick<InsertDiaryEntry, "textContent" | "imageUrl" | "audioUrl">,
+) {
+  await getDb().update(schema.diaryEntries).set(data).where(eq(schema.diaryEntries.id, id));
+  return findDiaryEntryById(id);
+}
+
 // ============== AI FEEDBACK ==============
 
 export async function findAIFeedbackByChild(childId: number) {
@@ -48,10 +56,22 @@ export async function findAIFeedbackByChild(childId: number) {
   });
 }
 
+// Full attempt/conversation history for one diary entry, oldest first.
 export async function findAIFeedbackByEntry(entryId: number) {
-  return getDb().query.aiFeedback.findFirst({
+  return getDb().query.aiFeedback.findMany({
     where: eq(schema.aiFeedback.entryId, entryId),
+    orderBy: (f, { asc }) => [asc(f.attemptNumber)],
   });
+}
+
+export async function findLatestAttemptNumber(entryId: number) {
+  const attempts = await getDb().query.aiFeedback.findMany({
+    where: eq(schema.aiFeedback.entryId, entryId),
+    columns: { attemptNumber: true },
+    orderBy: (f, { desc }) => [desc(f.attemptNumber)],
+    limit: 1,
+  });
+  return attempts.at(0)?.attemptNumber ?? 0;
 }
 
 export async function findUndeliveredFeedback(childId: number) {

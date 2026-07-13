@@ -1,7 +1,7 @@
 import { eq, and, gte } from "drizzle-orm";
 import * as schema from "@db/schema";
 import type { InsertSubscription, InsertPayment } from "@db/schema";
-import { getDb } from "./connection";
+import { getDb, type DbOrTx } from "./connection";
 
 export async function findSubscriptionsByParent(parentId: number) {
   return getDb().query.subscriptions.findMany({
@@ -41,8 +41,8 @@ export async function createSubscription(data: InsertSubscription) {
   return findSubscriptionById(result.id);
 }
 
-export async function findSubscriptionById(id: number) {
-  return getDb().query.subscriptions.findFirst({
+export async function findSubscriptionById(id: number, db: DbOrTx = getDb()) {
+  return db.query.subscriptions.findFirst({
     where: eq(schema.subscriptions.id, id),
     with: {
       child: true,
@@ -52,8 +52,8 @@ export async function findSubscriptionById(id: number) {
   });
 }
 
-export async function findSubscriptionByStripeId(stripeSubscriptionId: string) {
-  return getDb().query.subscriptions.findFirst({
+export async function findSubscriptionByStripeId(stripeSubscriptionId: string, db: DbOrTx = getDb()) {
+  return db.query.subscriptions.findFirst({
     where: eq(schema.subscriptions.stripeSubscriptionId, stripeSubscriptionId),
     with: {
       child: true,
@@ -63,12 +63,12 @@ export async function findSubscriptionByStripeId(stripeSubscriptionId: string) {
   });
 }
 
-export async function updateSubscription(id: number, data: Partial<InsertSubscription>) {
-  await getDb()
+export async function updateSubscription(id: number, data: Partial<InsertSubscription>, db: DbOrTx = getDb()) {
+  await db
     .update(schema.subscriptions)
     .set(data)
     .where(eq(schema.subscriptions.id, id));
-  return findSubscriptionById(id);
+  return findSubscriptionById(id, db);
 }
 
 export async function cancelSubscription(id: number) {
@@ -77,8 +77,8 @@ export async function cancelSubscription(id: number) {
 
 // ============== PAYMENTS ==============
 
-export async function createPayment(data: InsertPayment) {
-  const [result] = await getDb()
+export async function createPayment(data: InsertPayment, db: DbOrTx = getDb()) {
+  const [result] = await db
     .insert(schema.payments)
     .values(data)
     .$returningId();

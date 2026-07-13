@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router";
-import { trpc } from "@/providers/trpc";
+import { trpc } from "@/providers/trpcClient";
 import { useChildAuth } from "@/hooks/useChildAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,6 +22,8 @@ import {
   Trophy,
   BookOpen,
   LogOut,
+  Lightbulb,
+  RotateCcw,
 } from "lucide-react";
 
 const moods = [
@@ -37,15 +39,34 @@ export default function ChildDiary() {
   const [text, setText] = useState("");
   const [selectedMood, setSelectedMood] = useState<"happy" | "excited" | "calm" | "loved" | "sad">("happy");
   const [submitted, setSubmitted] = useState(false);
+  const [activeEntryId, setActiveEntryId] = useState<number | null>(null);
+  const [isRevising, setIsRevising] = useState(false);
+  const [revisedText, setRevisedText] = useState("");
 
   const childSession = useChildAuth();
   const entries = trpc.diary.childEntries.useQuery(undefined, { enabled: !!childSession.data });
   const logout = trpc.auth.childLogout.useMutation({ onSuccess: () => navigate("/child-login") });
+  const utils = trpc.useUtils();
+
+  const entryFeedback = trpc.diary.entryFeedback.useQuery(
+    { entryId: activeEntryId ?? 0 },
+    { enabled: activeEntryId !== null }
+  );
+  const latestFeedback = entryFeedback.data?.at(-1);
 
   const createEntry = trpc.diary.create.useMutation({
-    onSuccess: () => {
+    onSuccess: (entry) => {
       setSubmitted(true);
       setText("");
+      setActiveEntryId(entry!.id);
+      entries.refetch();
+    },
+  });
+
+  const resubmitEntry = trpc.diary.resubmit.useMutation({
+    onSuccess: () => {
+      setIsRevising(false);
+      utils.diary.entryFeedback.invalidate({ entryId: activeEntryId ?? 0 });
       entries.refetch();
     },
   });
@@ -58,6 +79,11 @@ export default function ChildDiary() {
       mood: selectedMood,
       entryDate: new Date().toISOString(),
     });
+  };
+
+  const handleResubmit = () => {
+    if (!activeEntryId || !revisedText.trim()) return;
+    resubmitEntry.mutate({ entryId: activeEntryId, textContent: revisedText });
   };
 
   const handleLogout = () => {
@@ -220,16 +246,98 @@ export default function ChildDiary() {
                   <p className="text-gray-600">
                     Your good deed has been recorded! Your parent can view it in their diary dashboard.
                   </p>
-                  <Button
-                    onClick={() => setSubmitted(false)}
-                    variant="outline"
-                    className="mt-4 rounded-full"
-                  >
-                    Write Another Entry
-                  </Button>
                 </CardContent>
               </Card>
 
+              {/* Tutor feedback */}
+              {entryFeedback.isLoading && (
+                <p className="text-center text-sm text-gray-500 mb-6">Your tutor is reading what you wrote…</p>
+              )}
+              {latestFeedback && (
+                <Card className="border-4 border-purple-200 overflow-hidden mb-6">
+                  <div className="h-2 bg-gradient-to-r from-purple-400 to-pink-400" />
+                  <CardContent className="p-6 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="h-5 w-5 text-purple-500" />
+                        <span className="font-bold text-purple-700">
+                          {latestFeedback.characterName || "Chindela"} says:
+                        </span>
+                      </div>
+                      {entryFeedback.data && entryFeedback.data.length > 1 && (
+                        <Badge variant="outline">Attempt {latestFeedback.attemptNumber}</Badge>
+                      )}
+                    </div>
+                    <p className="text-gray-700">{latestFeedback.positiveFeedback}</p>
+                    {latestFeedback.mistakesExplained && (
+                      <div className="p-3 bg-orange-50 rounded-lg border border-orange-100">
+                        <p className="text-sm text-orange-700">{latestFeedback.mistakesExplained}</p>
+                      </div>
+                    )}
+                    {latestFeedback.hints && (
+                      <div className="p-3 bg-purple-50 rounded-lg border border-purple-100 flex items-start gap-2">
+                        <Lightbulb className="h-4 w-4 text-purple-500 mt-0.5 shrink-0" />
+                        <p className="text-sm text-purple-700">{latestFeedback.hints}</p>
+                      </div>
+                    )}
+                    {latestFeedback.reflectionGuidance && (
+                      <p className="text-sm text-gray-600 italic">{latestFeedback.reflectionGuidance}</p>
+                    )}
+                    {latestFeedback.encouragement && (
+                      <div className="p-3 bg-green-50 rounded-lg border border-green-100">
+                        <p className="text-sm text-green-700">{latestFeedback.encouragement}</p>
+                      </div>
+                    )}
+
+                    {isRevising ? (
+                      <div className="space-y-3 pt-2">
+                        <Textarea
+                          value={revisedText}
+                          onChange={(e) => setRevisedText(e.target.value)}
+                          className="min-h-[100px] border-2 border-gray-200 rounded-xl resize-none"
+                          placeholder="Update your entry based on the hint above..."
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={handleResubmit}
+                            disabled={!revisedText.trim() || resubmitEntry.isPending}
+                            className="flex-1 bg-purple-500 hover:bg-purple-600 rounded-full"
+                          >
+                            {resubmitEntry.isPending ? "Sending…" : "Resubmit"}
+                          </Button>
+                          <Button variant="outline" className="rounded-full" onClick={() => setIsRevising(false)}>
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        className="rounded-full"
+                        onClick={() => {
+                          setRevisedText(latestFeedback.submittedText);
+                          setIsRevising(true);
+                        }}
+                      >
+                        <RotateCcw className="h-4 w-4 mr-2" />
+                        Try again with this hint
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              <Button
+                onClick={() => {
+                  setSubmitted(false);
+                  setActiveEntryId(null);
+                  setIsRevising(false);
+                }}
+                variant="outline"
+                className="rounded-full"
+              >
+                Write Another Entry
+              </Button>
             </motion.div>
           </AnimatePresence>
         )}

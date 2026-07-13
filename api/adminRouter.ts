@@ -2,6 +2,7 @@ import { createRouter, adminQuery } from "./middleware";
 import { getDb } from "./queries/connection";
 import { count, eq } from "drizzle-orm";
 import * as schema from "@db/schema";
+import { findAllContributions, contributionTotals } from "./queries/contributions";
 
 export const adminRouter = createRouter({
   stats: adminQuery.query(async () => {
@@ -101,5 +102,13 @@ export const adminRouter = createRouter({
         payments: true,
       },
     });
+  }),
+
+  allContributions: adminQuery.query(async () => {
+    return findAllContributions();
+  }),
+
+  contributionStats: adminQuery.query(async () => {
+    return contributionTotals();
   }),
 });

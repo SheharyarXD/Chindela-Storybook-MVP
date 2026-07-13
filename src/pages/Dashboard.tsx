@@ -1,5 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
-import { trpc } from "@/providers/trpc";
+import { trpc } from "@/providers/trpcClient";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +33,7 @@ import {
   ArrowRight,
   Star,
   Calendar,
+  type LucideIcon,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -283,6 +284,12 @@ export default function Dashboard() {
                       <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>
+                  <Link to="/account-security">
+                    <Button variant="outline" className="w-full justify-between">
+                      Account & Security
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
 
@@ -328,7 +335,15 @@ export default function Dashboard() {
   );
 }
 
-function StatCard({ label, value, icon: Icon, color, bg }: any) {
+interface StatCardProps {
+  label: string;
+  value: number;
+  icon: LucideIcon;
+  color: string;
+  bg: string;
+}
+
+function StatCard({ label, value, icon: Icon, color, bg }: StatCardProps) {
   return (
     <Card>
       <CardContent className="p-6">
@@ -346,7 +361,18 @@ function StatCard({ label, value, icon: Icon, color, bg }: any) {
   );
 }
 
-function ChildCard({ child }: { child: any }) {
+interface ChildCardProps {
+  id: number;
+  name: string;
+  avatar?: string | null;
+  age: number;
+  isActive: boolean;
+  totalEntries?: number | null;
+  streakDays?: number | null;
+  ageGroup?: { name: string } | null;
+}
+
+function ChildCard({ child }: { child: ChildCardProps }) {
   const colorMap: Record<string, string> = {
     "3-4 years": "from-pink-400 to-rose-400",
     "5-7 years": "from-green-400 to-emerald-400",
@@ -355,6 +381,9 @@ function ChildCard({ child }: { child: any }) {
     "14-16 years": "from-amber-400 to-orange-400",
     "18+": "from-gray-400 to-slate-400",
   };
+
+  const { data: progress } = trpc.progress.byChild.useQuery({ childId: child.id });
+  const completedStories = progress?.filter((p) => p.isCompleted).length ?? 0;
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
@@ -379,7 +408,7 @@ function ChildCard({ child }: { child: any }) {
           </Badge>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mb-4">
+        <div className="grid grid-cols-4 gap-2 mb-4">
           <div className="text-center p-2 rounded-lg bg-gray-50">
             <BookOpen className="h-4 w-4 text-gray-400 mx-auto mb-1" />
             <p className="text-lg font-bold">{child.totalEntries || 0}</p>
@@ -389,6 +418,11 @@ function ChildCard({ child }: { child: any }) {
             <TrendingUp className="h-4 w-4 text-gray-400 mx-auto mb-1" />
             <p className="text-lg font-bold">{child.streakDays || 0}</p>
             <p className="text-[10px] text-gray-500">Streak</p>
+          </div>
+          <div className="text-center p-2 rounded-lg bg-gray-50">
+            <Star className="h-4 w-4 text-gray-400 mx-auto mb-1" />
+            <p className="text-lg font-bold">{completedStories}</p>
+            <p className="text-[10px] text-gray-500">Stories</p>
           </div>
           <div className="text-center p-2 rounded-lg bg-gray-50">
             <Calendar className="h-4 w-4 text-gray-400 mx-auto mb-1" />

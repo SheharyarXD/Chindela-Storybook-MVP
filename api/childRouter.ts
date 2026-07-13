@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createRouter, authedQuery, adminQuery } from "./middleware";
+import { createRouter, authedQuery } from "./middleware";
 import {
   findChildrenByParentId,
   findChildById,
@@ -75,11 +75,4 @@ export const childRouter = createRouter({
       await deleteChild(input.id);
       return { success: true };
     }),
-
-  // Admin: list all children
-  adminList: adminQuery.query(async () => {
-    // For admin, we'd need a query to get all children
-    // This is a simplified version
-    return { message: "Use a direct DB query for all children" };
-  }),
 });

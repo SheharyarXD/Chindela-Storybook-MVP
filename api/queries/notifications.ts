@@ -1,7 +1,7 @@
 import { eq, desc, and } from "drizzle-orm";
 import * as schema from "@db/schema";
 import type { InsertNotification } from "@db/schema";
-import { getDb } from "./connection";
+import { getDb, type DbOrTx } from "./connection";
 
 export async function findNotificationsByUser(userId: number) {
   return getDb().query.notifications.findMany({
@@ -23,8 +23,8 @@ export async function findUnreadNotifications(userId: number) {
   });
 }
 
-export async function createNotification(data: InsertNotification) {
-  const [result] = await getDb()
+export async function createNotification(data: InsertNotification, db: DbOrTx = getDb()) {
+  const [result] = await db
     .insert(schema.notifications)
     .values(data)
     .$returningId();

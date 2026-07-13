@@ -28,3 +28,11 @@ export async function updateLastSignIn(id: number) {
 export async function setStripeCustomerId(id: number, stripeCustomerId: string) {
   await getDb().update(schema.users).set({ stripeCustomerId }).where(eq(schema.users.id, id));
 }
+
+export async function setEmailVerified(id: number) {
+  await getDb().update(schema.users).set({ emailVerifiedAt: new Date() }).where(eq(schema.users.id, id));
+}
+
+export async function updatePasswordHash(id: number, passwordHash: string) {
+  await getDb().update(schema.users).set({ passwordHash }).where(eq(schema.users.id, id));
+}

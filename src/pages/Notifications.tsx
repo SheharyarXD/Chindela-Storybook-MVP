@@ -1,4 +1,4 @@
-import { trpc } from "@/providers/trpc";
+import { trpc } from "@/providers/trpcClient";
 import { useAuth } from "@/hooks/useAuth";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,9 +15,10 @@ import {
   Settings,
   Check,
   AlertTriangle,
+  type LucideIcon,
 } from "lucide-react";
 
-const typeConfig: Record<string, { icon: any; color: string; bg: string }> = {
+const typeConfig: Record<string, { icon: LucideIcon; color: string; bg: string }> = {
   diary_entry: { icon: BookOpen, color: "text-purple-500", bg: "bg-purple-50" },
   ai_feedback: { icon: Sparkles, color: "text-blue-500", bg: "bg-blue-50" },
   subscription_expiry: { icon: CreditCard, color: "text-amber-500", bg: "bg-amber-50" },

@@ -6,6 +6,9 @@ async function seed() {
   console.log("Seeding database...");
 
   // Seed Age Groups
+  // Subscription pricing is flat across every age group (see
+  // contracts/constants.ts SubscriptionPricingGBPPence) -- age groups only
+  // control content targeting here, not price.
   const ageGroupData: schema.InsertAgeGroup[] = [
     { name: "3-4 years", minAge: 3, maxAge: 4, description: "Early childhood - simple stories and visual learning", color: "#FFB347" },
     { name: "5-7 years", minAge: 5, maxAge: 7, description: "Early readers - interactive stories with morals", color: "#77DD77" },
