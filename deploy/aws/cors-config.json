@@ -1,0 +1,12 @@
+[
+  {
+    "AllowedOrigins": [
+      "https://www.chindela-bymjcic.com",
+      "https://chindela-bymjcic.com"
+    ],
+    "AllowedMethods": ["GET", "POST", "HEAD"],
+    "AllowedHeaders": ["*"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3000
+  }
+]

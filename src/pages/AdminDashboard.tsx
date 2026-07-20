@@ -802,6 +802,7 @@ function UsersTab() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>ID</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Parent</TableHead>
                 <TableHead>Age Group</TableHead>
@@ -813,6 +814,7 @@ function UsersTab() {
             <TableBody>
               {children?.map((child) => (
                 <TableRow key={child.id}>
+                  <TableCell className="font-mono text-gray-500">{child.id}</TableCell>
                   <TableCell className="font-medium">{child.name}</TableCell>
                   <TableCell>{child.parent?.name || "Unknown"}</TableCell>
                   <TableCell>{child.ageGroup?.name}</TableCell>
@@ -826,7 +828,7 @@ function UsersTab() {
                 </TableRow>
               )) || (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-gray-500 py-8">
+                  <TableCell colSpan={7} className="text-center text-gray-500 py-8">
                     No children registered yet.
                   </TableCell>
                 </TableRow>

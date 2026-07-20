@@ -401,6 +401,9 @@ function ChildCard({ child }: { child: ChildCardProps }) {
             <div>
               <h3 className="font-semibold">{child.name}</h3>
               <p className="text-xs text-gray-500">{child.ageGroup?.name} | {child.age} years old</p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Child Login ID: <span className="font-mono font-semibold text-gray-600">{child.id}</span>
+              </p>
             </div>
           </div>
           <Badge variant={child.isActive ? "default" : "secondary"} className="bg-green-500">
