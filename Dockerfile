@@ -12,6 +12,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 # esbuild bundles api/boot.ts (and its dependencies) into a single dist/boot.js,
 # so the runtime image only needs the build output -- no node_modules copy.
+COPY --from=build /app/package.json ./package.json
+COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/db/migrations ./db/migrations
 COPY --from=build /app/drizzle.config.ts ./drizzle.config.ts
