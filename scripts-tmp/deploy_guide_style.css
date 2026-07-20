@@ -1,0 +1,126 @@
+/* ---------------- SERVICE CARDS ---------------- */
+.service {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  margin: 20px 0 28px 0;
+  overflow: hidden;
+  break-inside: avoid;
+}
+.service-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #fffbeb, #fff7ed);
+  border-bottom: 1px solid var(--line);
+}
+.service-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--amber), var(--orange));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20pt;
+  flex-shrink: 0;
+}
+.service-head h3 { margin: 0; font-size: 15.5pt; color: #111827; }
+.service-head .service-sub { margin: 2px 0 0 0; font-size: 9.5pt; color: var(--muted); }
+.service-body { padding: 16px 20px; }
+.service-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px;
+  margin-bottom: 12px;
+}
+.service-grid h4 { margin: 0 0 3px 0; font-size: 9.5pt; text-transform: uppercase; letter-spacing: 0.04em; color: #b45309; }
+.service-grid p { margin: 0; font-size: 10.3pt; color: #374151; }
+.service-footer {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 10px; padding-top: 12px; border-top: 1px dashed var(--line);
+  flex-wrap: wrap; gap: 10px;
+}
+.pill {
+  display: inline-block; padding: 4px 12px; border-radius: 999px;
+  font-size: 9pt; font-weight: 700;
+}
+.pill-free { background: #ecfdf5; color: #047857; }
+.pill-paid { background: #fef3c7; color: #92400e; }
+.signup-link {
+  font-size: 10pt; font-weight: 600; color: var(--orange); text-decoration: none;
+}
+.provide-box {
+  margin-top: 12px; background: var(--wash); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px;
+}
+.provide-box h4 { margin: 0 0 6px 0; font-size: 9.5pt; text-transform: uppercase; letter-spacing: 0.04em; color: #374151; }
+.provide-box ul { margin: 0; padding-left: 18px; }
+.provide-box li { font-size: 10pt; color: #374151; margin: 3px 0; }
+
+/* ---------------- DEPLOYMENT CHECKLIST ---------------- */
+.deploy-checklist { list-style: none; padding: 0; margin: 18px 0; counter-reset: step; }
+.deploy-checklist li {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 12px 16px; margin-bottom: 8px;
+  background: var(--wash); border: 1px solid var(--line); border-radius: 10px;
+}
+.deploy-checklist .box {
+  width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--amber);
+  flex-shrink: 0; margin-top: 2px;
+}
+.deploy-checklist .step-text { font-size: 11pt; color: #111827; font-weight: 600; }
+.deploy-checklist .step-owner { font-size: 8.7pt; color: var(--muted); font-weight: 400; margin-top: 2px; }
+
+/* ---------------- NEXT STEPS TIMELINE ---------------- */
+.timeline { list-style: none; padding: 0; margin: 20px 0; }
+.timeline li {
+  display: flex; gap: 16px; padding-bottom: 26px; position: relative;
+}
+.timeline li:not(:last-child)::before {
+  content: ''; position: absolute; left: 17px; top: 36px; bottom: 0; width: 2px; background: var(--line);
+}
+.timeline .t-num {
+  width: 36px; height: 36px; border-radius: 999px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--amber), var(--orange)); color: white;
+  display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13pt;
+  z-index: 1;
+}
+.timeline .t-body h4 { margin: 4px 0 3px 0; font-size: 12.5pt; }
+.timeline .t-body p { margin: 0; font-size: 10.3pt; color: #374151; }
+.timeline .t-who {
+  display: inline-block; margin-top: 5px; font-size: 8.5pt; font-weight: 700;
+  padding: 2px 10px; border-radius: 999px;
+}
+.t-who-client { background: #eff6ff; color: #1d4ed8; }
+.t-who-dev { background: #faf5ff; color: #7c3aed; }
+
+/* ---------------- CREDENTIALS TABLE ---------------- */
+.cred-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 10.3pt; }
+.cred-table th, .cred-table td { border: 1px solid var(--line); padding: 10px 12px; text-align: left; vertical-align: top; }
+.cred-table th { background: #111827; color: white; font-size: 9.5pt; text-transform: uppercase; letter-spacing: 0.03em; }
+.cred-table tr:nth-child(even) td { background: var(--wash); }
+.cred-table td.item { font-weight: 700; color: #111827; }
+.cred-table td.badge-after { color: #b45309; font-weight: 600; font-size: 9pt; }
+
+/* ---------------- FINAL CTA PAGE ---------------- */
+.cta-page {
+  height: 277mm;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center;
+  background: linear-gradient(160deg, #fff7ed 0%, #fffbeb 45%, #ffffff 100%);
+  padding: 20mm;
+}
+.cta-emoji { font-size: 48pt; margin-bottom: 10px; }
+.cta-title {
+  font-size: 30pt; margin: 0 0 16px 0; color: #111827;
+  background: linear-gradient(90deg, var(--amber), var(--orange));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.cta-sub { font-size: 13pt; color: #374151; max-width: 480px; margin-bottom: 36px; line-height: 1.6; }
+.cta-list {
+  background: white; border: 1px solid var(--line); border-radius: 16px;
+  padding: 26px 36px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); text-align: left;
+  max-width: 460px;
+}
+.cta-list li { font-size: 11pt; margin: 8px 0; color: #111827; }
+.cta-footer { margin-top: 32px; font-size: 10pt; color: var(--muted); }
+
+/* ---------------- NOTE BOX ---------------- */
+.note-box {
+  background: #eff6ff; border-left: 4px solid #3b82f6; padding: 14px 18px; border-radius: 6px; margin: 18px 0; font-size: 10.5pt; color: #1e3a8a;
+}

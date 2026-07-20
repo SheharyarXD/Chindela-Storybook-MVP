@@ -1,0 +1,221 @@
+:root {
+  --amber: #f59e0b;
+  --orange: #f97316;
+  --ink: #1f2937;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --paper: #ffffff;
+  --wash: #fafaf9;
+  --admin: #7c3aed;
+  --parent: #f59e0b;
+  --child: #10b981;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+  color: var(--ink);
+  font-size: 11.5pt;
+  line-height: 1.55;
+  background: var(--paper);
+}
+
+h1, h2, h3, h4 { font-family: 'Segoe UI', -apple-system, sans-serif; font-weight: 700; color: var(--ink); }
+p { margin: 0.5em 0; color: #374151; }
+a { color: var(--orange); }
+
+/* ---------------- COVER ---------------- */
+.cover {
+  height: 277mm;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: linear-gradient(160deg, #fff7ed 0%, #fffbeb 45%, #ffffff 100%);
+  page-break-after: always;
+  padding: 20mm;
+}
+.cover-badge {
+  display: inline-block;
+  padding: 6px 18px;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #b45309;
+  font-size: 10pt;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  margin-bottom: 28px;
+}
+.cover-logo {
+  font-size: 22pt;
+  font-weight: 800;
+  background: linear-gradient(90deg, var(--amber), var(--orange));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 18px;
+}
+.cover-title {
+  font-size: 34pt;
+  line-height: 1.15;
+  margin: 0 0 14px 0;
+  color: #111827;
+}
+.cover-subtitle {
+  font-size: 14pt;
+  color: var(--muted);
+  margin-bottom: 48px;
+}
+.cover-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 60px;
+  text-align: left;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 28px 40px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.06);
+}
+.cover-meta span { display: block; font-size: 9pt; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 4px; }
+.cover-meta strong { font-size: 12.5pt; color: #111827; }
+.cover-footer { margin-top: 40px; font-size: 9.5pt; color: var(--muted); }
+
+/* ---------------- TOC ---------------- */
+.toc-page { page-break-after: always; padding-top: 6mm; }
+.toc-heading {
+  font-size: 22pt;
+  margin-bottom: 22px;
+  padding-bottom: 12px;
+  border-bottom: 3px solid var(--amber);
+}
+.toc-list { list-style: none; padding: 0; margin: 0; columns: 1; }
+.toc-list li { padding: 10px 0; border-bottom: 1px dotted var(--line); font-size: 12.5pt; }
+.toc-list a { text-decoration: none; color: #111827; font-weight: 600; }
+.toc-list a:hover { color: var(--orange); }
+
+/* ---------------- SECTIONS ---------------- */
+.section { page-break-before: always; padding-top: 4mm; }
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 3px solid var(--amber);
+}
+.section-num {
+  width: 42px; height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--amber), var(--orange));
+  color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18pt; font-weight: 800;
+  flex-shrink: 0;
+}
+.section-head h2 { font-size: 21pt; margin: 0; }
+.section h3 { font-size: 14pt; margin-top: 26px; margin-bottom: 8px; color: #92400e; }
+.subsection-heading {
+  font-size: 15pt;
+  margin-top: 30px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  color: #111827;
+}
+
+.check-list { padding-left: 0; list-style: none; margin: 10px 0; }
+.check-list li { position: relative; padding-left: 26px; margin: 8px 0; color: #374151; }
+.check-list li::before { content: '✓'; position: absolute; left: 0; color: var(--amber); font-weight: 800; }
+
+.callout {
+  background: #fffbeb;
+  border-left: 4px solid var(--amber);
+  padding: 14px 18px;
+  border-radius: 6px;
+  margin: 18px 0;
+  font-size: 11pt;
+}
+
+/* ---------------- ROLE CARDS ---------------- */
+.role-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 18px; }
+.role-card { border: 1px solid var(--line); border-radius: 14px; padding: 18px; background: var(--wash); }
+.role-card h3 { margin: 6px 0 4px 0; font-size: 13.5pt; }
+.role-card p { font-size: 10pt; color: var(--muted); margin: 0 0 10px 0; }
+.role-card ul { margin: 0; padding-left: 18px; font-size: 9.8pt; }
+.role-card li { margin: 5px 0; color: #374151; }
+.role-icon { font-size: 24pt; }
+.role-admin { border-top: 4px solid var(--admin); }
+.role-parent { border-top: 4px solid var(--parent); }
+.role-child { border-top: 4px solid var(--child); }
+
+/* ---------------- FEATURE BLOCKS ---------------- */
+.feature { margin: 26px 0 34px 0; }
+.feature-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+.feature-head h3 { margin: 0; font-size: 14.5pt; color: #111827; }
+.tag {
+  font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  padding: 3px 10px; border-radius: 999px; background: #f3f4f6; color: #6b7280;
+}
+.feature-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px;
+  margin-top: 12px; padding: 14px 16px; background: var(--wash); border-radius: 10px; border: 1px solid var(--line);
+}
+.feature-grid h4 { margin: 0 0 3px 0; font-size: 9.5pt; text-transform: uppercase; letter-spacing: 0.04em; color: #b45309; }
+.feature-grid p { margin: 0; font-size: 10pt; color: #374151; }
+
+/* ---------------- SCREENSHOTS ---------------- */
+.shots-row { display: flex; gap: 14px; flex-wrap: wrap; margin: 10px 0; }
+.shot { margin: 0; flex: 1 1 420px; max-width: 100%; }
+.shot-narrow { flex: 0 1 260px; }
+.browser-chrome {
+  background: #e5e7eb; border-radius: 8px 8px 0 0; padding: 6px 10px; display: flex; gap: 5px;
+}
+.browser-chrome span { width: 8px; height: 8px; border-radius: 50%; background: #cbd5e1; display: inline-block; }
+.shot img {
+  display: block; margin: 0 auto; border: 1px solid var(--line); border-top: none;
+  border-radius: 0 0 8px 8px;
+  max-width: 100%; width: auto; height: auto; max-height: 185mm;
+}
+.shot figcaption { font-size: 8.7pt; color: var(--muted); margin-top: 5px; text-align: center; font-style: italic; }
+
+/* ---------------- CMS CHIPS ---------------- */
+.cms-grid { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; }
+.cms-chip {
+  background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;
+  padding: 8px 14px; border-radius: 999px; font-size: 10pt; font-weight: 600;
+}
+
+/* ---------------- PRICING ---------------- */
+.pricing-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 16px 0; }
+.price-card {
+  border: 1px solid var(--line); border-radius: 10px; padding: 14px 8px; text-align: center; background: var(--wash);
+}
+.price-card strong { display: block; font-size: 11pt; margin-bottom: 4px; }
+.price-card span { font-size: 8.5pt; color: var(--muted); }
+.price-card.highlight { border-color: var(--amber); background: #fffbeb; }
+
+/* ---------------- SECURITY GRID ---------------- */
+.security-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin: 18px 0; }
+.sec-card { border: 1px solid var(--line); border-radius: 12px; padding: 16px; break-inside: avoid; }
+.sec-card h4 { margin: 6px 0 4px 0; font-size: 12pt; }
+.sec-card p { font-size: 9.8pt; margin: 0; color: #374151; }
+.sec-icon { font-size: 18pt; }
+
+/* ---------------- STATUS ---------------- */
+.status-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 16px; margin: 14px 0 20px 0; }
+.status-item { font-size: 10.5pt; padding: 6px 0; }
+.status-item.done { color: #047857; font-weight: 600; }
+.status-item.pending { color: #b45309; font-weight: 600; }
+
+/* ---------------- INFRA TABLE ---------------- */
+.infra-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 10.5pt; }
+.infra-table th, .infra-table td { border: 1px solid var(--line); padding: 10px 12px; text-align: left; }
+.infra-table th { background: #fef3c7; color: #92400e; }
+.infra-table tr:nth-child(even) td { background: var(--wash); }
+
+/* ---------------- STEPS ---------------- */
+.steps-list { padding-left: 22px; }
+.steps-list li { margin: 12px 0; font-size: 11pt; }

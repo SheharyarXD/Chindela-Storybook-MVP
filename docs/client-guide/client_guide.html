@@ -1,0 +1,1074 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Chindela Interactive Storybook Platform — Client Guide</title>
+<style>
+:root {
+  --amber: #f59e0b;
+  --orange: #f97316;
+  --ink: #1f2937;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --paper: #ffffff;
+  --wash: #fafaf9;
+  --admin: #7c3aed;
+  --parent: #f59e0b;
+  --child: #10b981;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+  color: var(--ink);
+  font-size: 11.5pt;
+  line-height: 1.55;
+  background: var(--paper);
+}
+
+h1, h2, h3, h4 { font-family: 'Segoe UI', -apple-system, sans-serif; font-weight: 700; color: var(--ink); }
+p { margin: 0.5em 0; color: #374151; }
+a { color: var(--orange); }
+
+/* ---------------- COVER ---------------- */
+.cover {
+  height: 277mm;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: linear-gradient(160deg, #fff7ed 0%, #fffbeb 45%, #ffffff 100%);
+  page-break-after: always;
+  padding: 20mm;
+}
+.cover-badge {
+  display: inline-block;
+  padding: 6px 18px;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #b45309;
+  font-size: 10pt;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  margin-bottom: 28px;
+}
+.cover-logo {
+  font-size: 22pt;
+  font-weight: 800;
+  background: linear-gradient(90deg, var(--amber), var(--orange));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 18px;
+}
+.cover-title {
+  font-size: 34pt;
+  line-height: 1.15;
+  margin: 0 0 14px 0;
+  color: #111827;
+}
+.cover-subtitle {
+  font-size: 14pt;
+  color: var(--muted);
+  margin-bottom: 48px;
+}
+.cover-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 60px;
+  text-align: left;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 28px 40px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.06);
+}
+.cover-meta span { display: block; font-size: 9pt; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 4px; }
+.cover-meta strong { font-size: 12.5pt; color: #111827; }
+.cover-footer { margin-top: 40px; font-size: 9.5pt; color: var(--muted); }
+
+/* ---------------- TOC ---------------- */
+.toc-page { page-break-after: always; padding-top: 6mm; }
+.toc-heading {
+  font-size: 22pt;
+  margin-bottom: 22px;
+  padding-bottom: 12px;
+  border-bottom: 3px solid var(--amber);
+}
+.toc-list { list-style: none; padding: 0; margin: 0; columns: 1; }
+.toc-list li { padding: 10px 0; border-bottom: 1px dotted var(--line); font-size: 12.5pt; }
+.toc-list a { text-decoration: none; color: #111827; font-weight: 600; }
+.toc-list a:hover { color: var(--orange); }
+
+/* ---------------- SECTIONS ---------------- */
+.section { page-break-before: always; padding-top: 4mm; }
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 3px solid var(--amber);
+}
+.section-num {
+  width: 42px; height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--amber), var(--orange));
+  color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18pt; font-weight: 800;
+  flex-shrink: 0;
+}
+.section-head h2 { font-size: 21pt; margin: 0; }
+.section h3 { font-size: 14pt; margin-top: 26px; margin-bottom: 8px; color: #92400e; }
+.subsection-heading {
+  font-size: 15pt;
+  margin-top: 30px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  color: #111827;
+}
+
+.check-list { padding-left: 0; list-style: none; margin: 10px 0; }
+.check-list li { position: relative; padding-left: 26px; margin: 8px 0; color: #374151; }
+.check-list li::before { content: '✓'; position: absolute; left: 0; color: var(--amber); font-weight: 800; }
+
+.callout {
+  background: #fffbeb;
+  border-left: 4px solid var(--amber);
+  padding: 14px 18px;
+  border-radius: 6px;
+  margin: 18px 0;
+  font-size: 11pt;
+}
+
+/* ---------------- ROLE CARDS ---------------- */
+.role-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 18px; }
+.role-card { border: 1px solid var(--line); border-radius: 14px; padding: 18px; background: var(--wash); }
+.role-card h3 { margin: 6px 0 4px 0; font-size: 13.5pt; }
+.role-card p { font-size: 10pt; color: var(--muted); margin: 0 0 10px 0; }
+.role-card ul { margin: 0; padding-left: 18px; font-size: 9.8pt; }
+.role-card li { margin: 5px 0; color: #374151; }
+.role-icon { font-size: 24pt; }
+.role-admin { border-top: 4px solid var(--admin); }
+.role-parent { border-top: 4px solid var(--parent); }
+.role-child { border-top: 4px solid var(--child); }
+
+/* ---------------- FEATURE BLOCKS ---------------- */
+.feature { margin: 26px 0 34px 0; }
+.feature-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+.feature-head h3 { margin: 0; font-size: 14.5pt; color: #111827; }
+.tag {
+  font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  padding: 3px 10px; border-radius: 999px; background: #f3f4f6; color: #6b7280;
+}
+.feature-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px;
+  margin-top: 12px; padding: 14px 16px; background: var(--wash); border-radius: 10px; border: 1px solid var(--line);
+}
+.feature-grid h4 { margin: 0 0 3px 0; font-size: 9.5pt; text-transform: uppercase; letter-spacing: 0.04em; color: #b45309; }
+.feature-grid p { margin: 0; font-size: 10pt; color: #374151; }
+
+/* ---------------- SCREENSHOTS ---------------- */
+.shots-row { display: flex; gap: 14px; flex-wrap: wrap; margin: 10px 0; }
+.shot { margin: 0; flex: 1 1 420px; max-width: 100%; }
+.shot-narrow { flex: 0 1 260px; }
+.browser-chrome {
+  background: #e5e7eb; border-radius: 8px 8px 0 0; padding: 6px 10px; display: flex; gap: 5px;
+}
+.browser-chrome span { width: 8px; height: 8px; border-radius: 50%; background: #cbd5e1; display: inline-block; }
+.shot img {
+  display: block; margin: 0 auto; border: 1px solid var(--line); border-top: none;
+  border-radius: 0 0 8px 8px;
+  max-width: 100%; width: auto; height: auto; max-height: 185mm;
+}
+.shot figcaption { font-size: 8.7pt; color: var(--muted); margin-top: 5px; text-align: center; font-style: italic; }
+
+/* ---------------- CMS CHIPS ---------------- */
+.cms-grid { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; }
+.cms-chip {
+  background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;
+  padding: 8px 14px; border-radius: 999px; font-size: 10pt; font-weight: 600;
+}
+
+/* ---------------- PRICING ---------------- */
+.pricing-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 16px 0; }
+.price-card {
+  border: 1px solid var(--line); border-radius: 10px; padding: 14px 8px; text-align: center; background: var(--wash);
+}
+.price-card strong { display: block; font-size: 11pt; margin-bottom: 4px; }
+.price-card span { font-size: 8.5pt; color: var(--muted); }
+.price-card.highlight { border-color: var(--amber); background: #fffbeb; }
+
+/* ---------------- SECURITY GRID ---------------- */
+.security-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin: 18px 0; }
+.sec-card { border: 1px solid var(--line); border-radius: 12px; padding: 16px; break-inside: avoid; }
+.sec-card h4 { margin: 6px 0 4px 0; font-size: 12pt; }
+.sec-card p { font-size: 9.8pt; margin: 0; color: #374151; }
+.sec-icon { font-size: 18pt; }
+
+/* ---------------- STATUS ---------------- */
+.status-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 16px; margin: 14px 0 20px 0; }
+.status-item { font-size: 10.5pt; padding: 6px 0; }
+.status-item.done { color: #047857; font-weight: 600; }
+.status-item.pending { color: #b45309; font-weight: 600; }
+
+/* ---------------- INFRA TABLE ---------------- */
+.infra-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 10.5pt; }
+.infra-table th, .infra-table td { border: 1px solid var(--line); padding: 10px 12px; text-align: left; }
+.infra-table th { background: #fef3c7; color: #92400e; }
+.infra-table tr:nth-child(even) td { background: var(--wash); }
+
+/* ---------------- STEPS ---------------- */
+.steps-list { padding-left: 22px; }
+.steps-list li { margin: 12px 0; font-size: 11pt; }
+
+</style>
+</head>
+<body>
+
+<!-- ================= COVER ================= -->
+<section class="cover">
+  <div class="cover-badge">Interactive Storybook Platform</div>
+  <div class="cover-logo">📖 Chindela</div>
+  <h1 class="cover-title">Chindela Interactive<br/>Storybook Platform</h1>
+  <p class="cover-subtitle">Client Product Guide &amp; Platform Handbook</p>
+  <div class="cover-meta">
+    <div><span>Project Name</span><strong>Chindela Interactive Storybook Platform</strong></div>
+    <div><span>Prepared For</span><strong>MJ CIC</strong></div>
+    <div><span>Prepared By</span><strong>Sameer</strong></div>
+    <div><span>Date</span><strong>July 15, 2026</strong></div>
+  </div>
+  <div class="cover-footer">Confidential — Prepared exclusively for MJ CIC</div>
+</section>
+
+<!-- ================= TOC ================= -->
+<section class="toc-page">
+  <h2 class="toc-heading">Table of Contents</h2>
+  <ol class="toc-list">
+    <li><a href="#sec-1">1. Project Overview</a></li>
+    <li><a href="#sec-2">2. System Roles</a></li>
+    <li><a href="#sec-3">3. Complete Feature Walkthrough</a></li>
+    <li><a href="#sec-4">4. The AI Tutor, Powered by Google Gemini</a></li>
+    <li><a href="#sec-5">5. Admin Content Management System</a></li>
+    <li><a href="#sec-6">6. Media Library</a></li>
+    <li><a href="#sec-7">7. Subscriptions & Payments</a></li>
+    <li><a href="#sec-8">8. Security & Privacy</a></li>
+    <li><a href="#sec-9">9. Future Expansion</a></li>
+    <li><a href="#sec-10">10. Infrastructure Required Before Launch</a></li>
+    <li><a href="#sec-11">11. Current Development Status</a></li>
+    <li><a href="#sec-12">12. Next Steps</a></li>
+  </ol>
+</section>
+
+<!-- ================= SECTION 1 ================= -->
+<section class="section" id="sec-1">
+  <div class="section-head"><span class="section-num">1</span><h2>Project Overview</h2></div>
+
+  <h3>What the Platform Does</h3>
+  <p>Chindela is a subscription-based interactive storybook website for children. Parents create an account, add
+  their children, and subscribe to unlock age-appropriate storybooks. Each story teaches a life lesson — kindness,
+  courage, honesty — through a guided reading experience featuring a cast of friendly animal characters. After
+  reading, children are encouraged to write a short "good deed" diary entry about something kind they did that day.
+  An AI-powered tutor, built on Google's Gemini technology, reads what the child wrote and responds with warm,
+  age-appropriate encouragement, gently points out any spelling or writing mistakes, and asks a thoughtful follow-up
+  question to help the child reflect. Parents can review everything their child writes and every response the AI
+  tutor gives, at any time.</p>
+
+  <h3>Who Uses It</h3>
+  <p>There are three types of people who use Chindela: <strong>parents</strong>, who manage their family's account,
+  subscriptions and billing; <strong>children</strong>, who read stories and write their diary in a safe, simplified
+  space designed just for them; and the <strong>administrator</strong> (you, or a member of your team), who manages
+  every piece of content on the platform — stories, lessons, characters, pricing and more — without ever needing a
+  developer.</p>
+
+  <h3>Benefits</h3>
+  <ul class="check-list">
+    <li>A safe, screen-time-positive activity that combines storytelling with real character education.</li>
+    <li>Personalised, encouraging feedback for every child, generated instantly by AI rather than requiring manual review.</li>
+    <li>Parents stay fully informed of their child's activity and progress without any extra effort.</li>
+    <li>All content — stories, lessons, images, audio, video — is managed by your team through a simple, visual dashboard.</li>
+    <li>Built on a modern, secure, and widely-used technology stack (the same class of technology used by major consumer apps), so it is reliable and straightforward to maintain.</li>
+  </ul>
+
+  <h3>Future Scalability</h3>
+  <p>The platform has been built from the ground up to grow with you. New stories, lessons, characters, age groups and
+  entire years of content can be added at any time through the admin dashboard, with no limit on volume and no
+  developer involvement required. Section 9 of this guide covers this in more detail.</p>
+</section>
+
+<!-- ================= SECTION 2 ================= -->
+<section class="section" id="sec-2">
+  <div class="section-head"><span class="section-num">2</span><h2>System Roles</h2></div>
+  <p>Chindela is built around three distinct roles, each with its own dedicated, purpose-built experience.</p>
+
+  <div class="role-grid">
+    <div class="role-card role-admin">
+      <div class="role-icon">🛡️</div>
+      <h3>Administrator</h3>
+      <p>Your team's control centre for the entire platform.</p>
+      <ul>
+        <li>Creates and edits stories, lessons and characters</li>
+        <li>Uploads and manages all images, audio, video and documents</li>
+        <li>Manages age groups, safety messages, and content years</li>
+        <li>Oversees every family's subscription and billing status</li>
+        <li>Views every registered parent and child account</li>
+      </ul>
+    </div>
+    <div class="role-card role-parent">
+      <div class="role-icon">👨‍👩‍👧</div>
+      <h3>Parent</h3>
+      <p>The account holder and guardian for one or more children.</p>
+      <ul>
+        <li>Registers, manages billing, and subscribes children to content</li>
+        <li>Adds children to their family account with a secure PIN</li>
+        <li>Browses the story library and reads stories alongside their child</li>
+        <li>Reviews every diary entry and AI tutor response their child receives</li>
+        <li>Manages notifications and account security settings</li>
+      </ul>
+    </div>
+    <div class="role-card role-child">
+      <div class="role-icon">🧒</div>
+      <h3>Child</h3>
+      <p>A simplified, playful, and safe space designed just for young readers.</p>
+      <ul>
+        <li>Logs in with a simple 4-digit PIN — no email or password needed</li>
+        <li>Reads storybooks unlocked by their parent's subscription</li>
+        <li>Writes a short daily diary entry about a good deed</li>
+        <li>Receives instant, encouraging feedback from the AI tutor character</li>
+        <li>Sees a friendly safety reminder on every screen</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SECTION 3 ================= -->
+<section class="section" id="sec-3">
+  <div class="section-head"><span class="section-num">3</span><h2>Complete Feature Walkthrough</h2></div>
+  <p>This section walks through every screen in the platform exactly as it looks today, captured directly from the
+  live application.</p>
+
+  <h3 class="subsection-heading">Getting Started</h3>
+  
+  <div class="feature" id="f-landing">
+    <div class="feature-head">
+      <span class="tag">Public</span>
+      <h3>Landing Page</h3>
+    </div>
+    <div class="shots-row">
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/01-landing-page.png" alt="The public landing page, introducing the platform to new visitors" />
+    <figcaption>The public landing page, introducing the platform to new visitors</figcaption>
+  </figure></div>
+    <div class="feature-grid">
+      <div><h4>Purpose</h4><p>The first impression for new visitors — introduces the platform and explains its value in plain language.</p></div>
+      <div><h4>How It Works</h4><p>A visitor arrives at the website and is greeted with a warm, colourful introduction to Chindela, a summary of what makes it valuable, and two clear buttons: one to get started as a parent, and one for children to log in.</p></div>
+      <div><h4>Benefits</h4><p>Builds trust and clarity from the very first moment, and routes each visitor — parent or child — to the correct part of the platform immediately.</p></div>
+      <div><h4>Example Usage</h4><p>A parent hears about Chindela from a friend, visits the website, reads the "Why Chindela?" section, and clicks "Get Started" to create an account.</p></div>
+    </div>
+  </div>
+  
+  <div class="feature" id="f-login">
+    <div class="feature-head">
+      <span class="tag">Public</span>
+      <h3>Parent &amp; Administrator Login</h3>
+    </div>
+    <div class="shots-row">
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/02-login-page.png" alt="The sign-in and account creation screen" />
+    <figcaption>The sign-in and account creation screen</figcaption>
+  </figure></div>
+    <div class="feature-grid">
+      <div><h4>Purpose</h4><p>A single, simple screen for parents and administrators to sign in, or for new parents to create an account.</p></div>
+      <div><h4>How It Works</h4><p>Visitors enter their email and password to sign in, or switch to "Create an account" to register as a new parent in seconds.</p></div>
+      <div><h4>Benefits</h4><p>One clean, familiar screen reduces confusion and gets people into the platform quickly.</p></div>
+      <div><h4>Example Usage</h4><p>A returning parent enters their email and password and is taken straight to their dashboard.</p></div>
+    </div>
+  </div>
+  
+  <div class="feature" id="f-child-login">
+    <div class="feature-head">
+      <span class="tag">Child</span>
+      <h3>Child Login</h3>
+    </div>
+    <div class="shots-row">
+  <figure class="shot shot-narrow">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/03-child-login-page.png" alt="The child-friendly PIN login screen" />
+    <figcaption>The child-friendly PIN login screen</figcaption>
+  </figure></div>
+    <div class="feature-grid">
+      <div><h4>Purpose</h4><p>A simplified, playful login built specifically for young children, who cannot be expected to type an email and password.</p></div>
+      <div><h4>How It Works</h4><p>The child enters the short ID number their parent gave them and taps their 4-digit PIN on a large, friendly number pad — no keyboard typing required.</p></div>
+      <div><h4>Benefits</h4><p>Removes every barrier a young child would face with a traditional login, while still keeping each child's account private and secure.</p></div>
+      <div><h4>Example Usage</h4><p>A 6-year-old taps in their ID and PIN independently and is straight into their own reading space in seconds.</p></div>
+    </div>
+  </div>
+
+  <h3 class="subsection-heading">Account Recovery &amp; Verification</h3>
+  
+  <div class="feature" id="f-forgot">
+    <div class="feature-head">
+      <span class="tag">Public</span>
+      <h3>Forgot Password</h3>
+    </div>
+    <div class="shots-row">
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/04-forgot-password-form.png" alt="Requesting a password reset link" />
+    <figcaption>Requesting a password reset link</figcaption>
+  </figure>
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/05-forgot-password-sent.png" alt="Confirmation that a reset link has been sent" />
+    <figcaption>Confirmation that a reset link has been sent</figcaption>
+  </figure></div>
+    <div class="feature-grid">
+      <div><h4>Purpose</h4><p>Lets a parent regain access to their account if they forget their password, without ever contacting support.</p></div>
+      <div><h4>How It Works</h4><p>The parent enters their email address; the platform emails them a secure, one-time link to reset their password. For privacy, the same confirmation message is shown whether or not that email is registered.</p></div>
+      <div><h4>Benefits</h4><p>A fully self-service recovery flow that follows the same security practices used by major banking and email providers.</p></div>
+      <div><h4>Example Usage</h4><p>A parent who has not logged in for months requests a reset link, receives it by email, and is back into their account within a minute.</p></div>
+    </div>
+  </div>
+  
+  <div class="feature" id="f-reset">
+    <div class="feature-head">
+      <span class="tag">Public</span>
+      <h3>Password Reset</h3>
+    </div>
+    <div class="shots-row">
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/06-reset-password-form.png" alt="Choosing a new password" />
+    <figcaption>Choosing a new password</figcaption>
+  </figure>
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/07-reset-password-success.png" alt="Confirmation that the password has been changed" />
+    <figcaption>Confirmation that the password has been changed</figcaption>
+  </figure></div>
+    <div class="feature-grid">
+      <div><h4>Purpose</h4><p>The second half of the recovery flow — where the parent sets a brand-new password.</p></div>
+      <div><h4>How It Works</h4><p>The parent follows the secure link from their email and chooses a new password (12 characters or more). Every device previously signed into that account is automatically signed out for safety.</p></div>
+      <div><h4>Benefits</h4><p>Guarantees that only the person with access to the account's email can ever regain entry, and that an old, possibly compromised session cannot remain active.</p></div>
+      <div><h4>Example Usage</h4><p>After resetting their password, a parent is asked to sign in again on their laptop, confirming the change took effect immediately.</p></div>
+    </div>
+  </div>
+  
+  <div class="feature" id="f-verify">
+    <div class="feature-head">
+      <span class="tag">Public</span>
+      <h3>Email Verification</h3>
+    </div>
+    <div class="shots-row">
+  <figure class="shot shot-narrow">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/08-email-verification-success.png" alt="A successfully verified email address" />
+    <figcaption>A successfully verified email address</figcaption>
+  </figure></div>
+    <div class="feature-grid">
+      <div><h4>Purpose</h4><p>Confirms that a parent's email address genuinely belongs to them.</p></div>
+      <div><h4>How It Works</h4><p>After registering, the parent receives a one-time verification link by email. Clicking it instantly confirms their address on the platform.</p></div>
+      <div><h4>Benefits</h4><p>Protects against fake or mistyped email addresses and ensures important account and billing notifications always reach the right inbox.</p></div>
+      <div><h4>Example Usage</h4><p>A newly registered parent clicks the link in their welcome email and sees an instant "verified" confirmation.</p></div>
+    </div>
+  </div>
+
+  <h3 class="subsection-heading">The Parent Experience</h3>
+  
+  <div class="feature" id="f-parent-dash">
+    <div class="feature-head">
+      <span class="tag">Parent</span>
+      <h3>Parent Dashboard</h3>
+    </div>
+    <div class="shots-row">
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/09-parent-dashboard.png" alt="The parent dashboard, showing children, subscriptions and recent activity" />
+    <figcaption>The parent dashboard, showing children, subscriptions and recent activity</figcaption>
+  </figure>
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/10-parent-add-child-dialog.png" alt="Adding a new child to the family account" />
+    <figcaption>Adding a new child to the family account</figcaption>
+  </figure>
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/11-parent-dashboard-two-children.png" alt="The dashboard after a second child has been added" />
+    <figcaption>The dashboard after a second child has been added</figcaption>
+  </figure></div>
+    <div class="feature-grid">
+      <div><h4>Purpose</h4><p>The parent's home base — a single screen showing every child, their activity, and quick access to every other part of the platform.</p></div>
+      <div><h4>How It Works</h4><p>At a glance, the parent sees how many children they have, how many active subscriptions, unread notifications, and total diary entries written. Each child appears as its own card with reading streaks and entry counts. A prominent "Add Child" button opens a short form to register a new child with a name, age, age group and a private 4-digit PIN.</p></div>
+      <div><h4>Benefits</h4><p>Everything a parent needs is one click away, with no digging through menus, and adding a new child takes under a minute.</p></div>
+      <div><h4>Example Usage</h4><p>A parent with two children can see at a glance that one child is on a 7-day writing streak, while the other needs a subscription to unlock new stories.</p></div>
+    </div>
+  </div>
+  
+  <div class="feature" id="f-story-browser">
+    <div class="feature-head">
+      <span class="tag">Parent</span>
+      <h3>Story Browser</h3>
+    </div>
+    <div class="shots-row">
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/12-story-browser.png" alt="Browsing the library of available storybooks" />
+    <figcaption>Browsing the library of available storybooks</figcaption>
+  </figure></div>
+    <div class="feature-grid">
+      <div><h4>Purpose</h4><p>Lets a parent browse every storybook available to their subscribed children.</p></div>
+      <div><h4>How It Works</h4><p>Stories are displayed as colourful cards, each showing its age group, theme, and featured character. Parents can search by title or filter by age group to quickly find the right story.</p></div>
+      <div><h4>Benefits</h4><p>Makes it easy for a parent to preview content before their child reads it, and to find stories matched to each child's age and interests.</p></div>
+      <div><h4>Example Usage</h4><p>A parent filters the library to "5–7 years" to find a story to read together with their daughter before bed.</p></div>
+    </div>
+  </div>
+  
+  <div class="feature" id="f-story-reader">
+    <div class="feature-head">
+      <span class="tag">Parent</span>
+      <h3>Story Reader</h3>
+    </div>
+    <div class="shots-row">
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/13-story-reader.png" alt="Reading a storybook in the page-by-page reader" />
+    <figcaption>Reading a storybook in the page-by-page reader</figcaption>
+  </figure></div>
+    <div class="feature-grid">
+      <div><h4>Purpose</h4><p>A beautiful, book-like reading experience for previewing any unlocked story.</p></div>
+      <div><h4>How It Works</h4><p>Each story opens like a real storybook: a cover page, an introduction to its featured character, a series of illustrated lesson pages, and a closing "moral of the story" page — all navigated with simple page-turn controls.</p></div>
+      <div><h4>Benefits</h4><p>Presents every story in an inviting, screen-friendly format that feels like reading a real book rather than browsing a website.</p></div>
+      <div><h4>Example Usage</h4><p>A parent reads through a story before assigning it, confirming the theme and tone are right for their child.</p></div>
+    </div>
+  </div>
+  
+  <div class="feature" id="f-diary-parent">
+    <div class="feature-head">
+      <span class="tag">Parent</span>
+      <h3>Diary &amp; AI Feedback Summary</h3>
+    </div>
+    <div class="shots-row">
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/14-diary-page-ai-feedback.png" alt="A parent reviewing their child's diary entries and the AI tutor's feedback" />
+    <figcaption>A parent reviewing their child's diary entries and the AI tutor's feedback</figcaption>
+  </figure></div>
+    <div class="feature-grid">
+      <div><h4>Purpose</h4><p>Full transparency for parents — every word their child writes, and every response the AI tutor gives, in one place.</p></div>
+      <div><h4>How It Works</h4><p>The parent selects a child from a dropdown to see that child's full diary history side-by-side with the AI tutor's feedback for each entry: what it praised, any writing mistakes it gently corrected, a helpful hint, a reflective question, and a note of encouragement.</p></div>
+      <div><h4>Benefits</h4><p>Parents never have to wonder what their child is writing or what the AI is telling them — everything is visible and reviewable at any time, which is central to keeping the experience safe.</p></div>
+      <div><h4>Example Usage</h4><p>A parent notices their child wrote about helping a classmate, reads the AI's kind and encouraging response, and brings it up over dinner that evening.</p></div>
+    </div>
+  </div>
+  
+  <div class="feature" id="f-notifications">
+    <div class="feature-head">
+      <span class="tag">Parent</span>
+      <h3>Notifications</h3>
+    </div>
+    <div class="shots-row">
+  <figure class="shot shot-narrow">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/15-notifications-page.png" alt="The parent notification centre" />
+    <figcaption>The parent notification centre</figcaption>
+  </figure></div>
+    <div class="feature-grid">
+      <div><h4>Purpose</h4><p>Keeps parents automatically informed of important activity without needing to check in constantly.</p></div>
+      <div><h4>How It Works</h4><p>The platform raises a notification whenever a child submits a new diary entry, receives AI feedback, or when a subscription is about to expire. A badge on the navigation bar shows how many notifications are unread.</p></div>
+      <div><h4>Benefits</h4><p>Parents stay engaged with their child's activity in real time, and never miss a subscription renewal.</p></div>
+      <div><h4>Example Usage</h4><p>A parent gets a notification the moment their child finishes writing their diary entry for the day.</p></div>
+    </div>
+  </div>
+  
+  <div class="feature" id="f-subscriptions">
+    <div class="feature-head">
+      <span class="tag">Parent</span>
+      <h3>Subscriptions</h3>
+    </div>
+    <div class="shots-row">
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/16-subscriptions-page.png" alt="Choosing a subscription plan for a child" />
+    <figcaption>Choosing a subscription plan for a child</figcaption>
+  </figure></div>
+    <div class="feature-grid">
+      <div><h4>Purpose</h4><p>Where a parent unlocks story content for a child by choosing a subscription plan.</p></div>
+      <div><h4>How It Works</h4><p>The parent selects a child, an age group, and a duration (1, 2, 3, 6 or 12 months), with the total price calculated automatically. An optional one-time contribution can be added to support the platform. Payment is handled securely through Stripe, a world-leading payment processor — see Section 7 for full details.</p></div>
+      <div><h4>Benefits</h4><p>A clear, flexible pricing model with no hidden steps, letting families choose the commitment level that suits them.</p></div>
+      <div><h4>Example Usage</h4><p>A parent subscribes their child to the "5–7 years" content for 3 months, adds a small optional contribution, and their child's stories unlock immediately after payment.</p></div>
+    </div>
+  </div>
+  
+  <div class="feature" id="f-account-security">
+    <div class="feature-head">
+      <span class="tag">Parent</span>
+      <h3>Account &amp; Security</h3>
+    </div>
+    <div class="shots-row">
+  <figure class="shot shot-narrow">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/17-account-security-page.png" alt="Managing account security settings" />
+    <figcaption>Managing account security settings</figcaption>
+  </figure></div>
+    <div class="feature-grid">
+      <div><h4>Purpose</h4><p>Gives parents control over their own account's security.</p></div>
+      <div><h4>How It Works</h4><p>From this screen, a parent can review their account details and manage their signed-in sessions and security preferences.</p></div>
+      <div><h4>Benefits</h4><p>Puts account safety directly in the parent's hands, in line with modern data-protection best practice.</p></div>
+      <div><h4>Example Usage</h4><p>A parent who signed in on a shared library computer returns home and reviews their account to make sure it is secure.</p></div>
+    </div>
+  </div>
+
+  <h3 class="subsection-heading">The Child Experience</h3>
+  
+  <div class="feature" id="f-child-dash">
+    <div class="feature-head">
+      <span class="tag">Child</span>
+      <h3>Child Dashboard</h3>
+    </div>
+    <div class="shots-row">
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/18-child-dashboard.png" alt="The child's home screen, with stories, diary, and friendly characters" />
+    <figcaption>The child's home screen, with stories, diary, and friendly characters</figcaption>
+  </figure></div>
+    <div class="feature-grid">
+      <div><h4>Purpose</h4><p>A warm, playful home screen designed entirely around a child's point of view.</p></div>
+      <div><h4>How It Works</h4><p>Two large, colourful buttons invite the child to "Read Stories" or open "My Diary." Beneath them, the child can see stories they are partway through, their bookmarked favourites, and a gallery of the friendly characters who guide them through the platform. A gentle safety reminder appears at the top of every screen.</p></div>
+      <div><h4>Benefits</h4><p>Everything is large, visual and simple enough for a young child to use independently, with safety built in from the first screen.</p></div>
+      <div><h4>Example Usage</h4><p>A child logs in after school and immediately sees they are halfway through yesterday's story, with one tap to continue.</p></div>
+    </div>
+  </div>
+  
+  <div class="feature" id="f-child-reader">
+    <div class="feature-head">
+      <span class="tag">Child</span>
+      <h3>Child Story Reader</h3>
+    </div>
+    <div class="shots-row">
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/19-child-reader-cover.png" alt="The story cover page in the child reader" />
+    <figcaption>The story cover page in the child reader</figcaption>
+  </figure>
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/20-child-reader-page.png" alt="Meeting a story character" />
+    <figcaption>Meeting a story character</figcaption>
+  </figure></div>
+    <div class="feature-grid">
+      <div><h4>Purpose</h4><p>The same beautiful storybook experience as the parent reader, tailored for the child's own account.</p></div>
+      <div><h4>How It Works</h4><p>The child taps through the story page by page, exactly like turning the pages of a real book. Their reading progress and bookmarks are saved automatically, so they can always pick up where they left off.</p></div>
+      <div><h4>Benefits</h4><p>Encourages independent reading in a format that feels tactile and familiar, while quietly saving progress in the background.</p></div>
+      <div><h4>Example Usage</h4><p>A child reads three pages of a story before dinner, closes the app, and picks up on the very same page the next morning.</p></div>
+    </div>
+  </div>
+  
+  <div class="feature" id="f-child-diary">
+    <div class="feature-head">
+      <span class="tag">Child</span>
+      <h3>Child Diary Submission</h3>
+    </div>
+    <div class="shots-row">
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/21-child-diary-form.png" alt="A child writing their daily good-deed diary entry" />
+    <figcaption>A child writing their daily good-deed diary entry</figcaption>
+  </figure></div>
+    <div class="feature-grid">
+      <div><h4>Purpose</h4><p>Where a child records a good deed they did that day, in their own words.</p></div>
+      <div><h4>How It Works</h4><p>The child picks how they are feeling from a row of friendly mood icons, then writes a short entry about something kind they did. One tap submits it — and, as described fully in Section 4, the AI tutor responds within moments.</p></div>
+      <div><h4>Benefits</h4><p>Builds a daily habit of reflection and kindness in a format so simple a young child can complete it independently.</p></div>
+      <div><h4>Example Usage</h4><p>A child writes "I shared my snack with a friend who forgot their lunch," picks the "Happy" mood, and submits it before returning to reading.</p></div>
+    </div>
+  </div>
+
+  <h3 class="subsection-heading">The Administrator Experience</h3>
+  
+  <div class="feature" id="f-admin-dash">
+    <div class="feature-head">
+      <span class="tag">Admin</span>
+      <h3>Admin Dashboard</h3>
+    </div>
+    <div class="shots-row">
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/22-admin-overview.png" alt="The administrator's home screen, with platform-wide statistics and recent activity" />
+    <figcaption>The administrator's home screen, with platform-wide statistics and recent activity</figcaption>
+  </figure></div>
+    <div class="feature-grid">
+      <div><h4>Purpose</h4><p>A single, real-time control centre giving your team an instant overview of the entire platform.</p></div>
+      <div><h4>How It Works</h4><p>The Overview tab shows live counts of users, children, stories, lessons, diary entries and active subscriptions, alongside a feed of recent family activity and recent subscriptions. Every other management tool — covered in Section 5 — is one click away along the top tab bar.</p></div>
+      <div><h4>Benefits</h4><p>Administrators can see the health and activity of the whole platform at a glance, without navigating through separate reports.</p></div>
+      <div><h4>Example Usage</h4><p>An administrator opens the dashboard each morning to check overnight sign-ups and new diary activity before reviewing the content queue.</p></div>
+    </div>
+  </div>
+  
+  <div class="feature" id="f-admin-users">
+    <div class="feature-head">
+      <span class="tag">Admin</span>
+      <h3>User Management</h3>
+    </div>
+    <div class="shots-row">
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/31-admin-user-management.png" alt="Viewing every registered family and child on the platform" />
+    <figcaption>Viewing every registered family and child on the platform</figcaption>
+  </figure></div>
+    <div class="feature-grid">
+      <div><h4>Purpose</h4><p>Gives administrators full visibility into every family using the platform.</p></div>
+      <div><h4>How It Works</h4><p>Every child account is listed alongside their parent, age group, age, number of diary entries, and active/inactive status, in a single searchable table.</p></div>
+      <div><h4>Benefits</h4><p>Provides your team with the oversight needed for customer support, safeguarding, and general account administration, all from one screen.</p></div>
+      <div><h4>Example Usage</h4><p>An administrator looks up a family who contacted support to confirm which age group their child is subscribed to.</p></div>
+    </div>
+  </div>
+  
+  <div class="feature" id="f-admin-billing">
+    <div class="feature-head">
+      <span class="tag">Admin</span>
+      <h3>Billing Overview</h3>
+    </div>
+    <div class="shots-row">
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/30-admin-billing.png" alt="The administrator's view of every subscription on the platform" />
+    <figcaption>The administrator's view of every subscription on the platform</figcaption>
+  </figure></div>
+    <div class="feature-grid">
+      <div><h4>Purpose</h4><p>Gives administrators full oversight of subscription and billing activity across every family.</p></div>
+      <div><h4>How It Works</h4><p>Every subscription on the platform is listed with its plan, status and value, giving a live picture of subscription revenue and activity without needing to log into Stripe directly.</p></div>
+      <div><h4>Benefits</h4><p>Keeps billing oversight in the same place as content management, so your team never needs to juggle multiple systems to understand the platform's subscription activity.</p></div>
+      <div><h4>Example Usage</h4><p>An administrator reviews active subscriptions at the end of the month as part of routine reporting.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SECTION 4 ================= -->
+<section class="section" id="sec-4">
+  <div class="section-head"><span class="section-num">4</span><h2>The AI Tutor, Powered by Google Gemini</h2></div>
+  <p>One of the platform's most distinctive features is its built-in AI tutor. It is powered by <strong>Google
+  Gemini</strong>, one of the world's leading artificial intelligence systems — the same underlying technology family
+  used across Google's own products. In Chindela, it takes on the role of a warm, patient character (shown to
+  children as "Chindela") who reads what a child writes and responds like a caring, encouraging teacher.</p>
+
+  
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/14-diary-page-ai-feedback.png" alt="Genuine AI tutor feedback, generated by Google Gemini and reviewed here on the parent's Diary page" />
+    <figcaption>Genuine AI tutor feedback, generated by Google Gemini and reviewed here on the parent's Diary page</figcaption>
+  </figure>
+
+  <h3>How Children Submit Their Work</h3>
+  <p>The platform is built to accept a child's work in several formats:</p>
+  <ul class="check-list">
+    <li><strong>Text</strong> — a child types their diary entry directly, as shown in Section 3.</li>
+    <li><strong>Image</strong> — a photo can be attached to an entry (for example, a picture of a kind act, or of handwritten work).</li>
+    <li><strong>Audio</strong> — a short voice recording can be attached for children who prefer speaking to typing.</li>
+  </ul>
+
+  <h3>How the AI Analyses the Work</h3>
+  <p>Once submitted, the entry (and any attached photo or recording) is securely sent to Google Gemini along with a
+  set of instructions that shape it into a safe, encouraging tutor for children. Gemini reads the entry the same way
+  a kind teacher would: understanding what the child did, checking their writing for small mistakes, and considering
+  how best to respond.</p>
+
+  <h3>How the AI Explains Mistakes</h3>
+  <p>Rather than simply marking work "right" or "wrong," the AI tutor gently explains any spelling or writing slips
+  it notices, in plain, friendly language a child can understand — for example, pointing out that "becuase" should be
+  "because," with a short explanation of why it matters for a reader.</p>
+
+  <h3>How the AI Teaches</h3>
+  <p>Alongside any correction, the tutor offers a helpful hint or memory trick to help the lesson stick, and a
+  thoughtful reflection question to encourage the child to think a little deeper about their good deed — for
+  instance, asking how their friend felt when they helped them.</p>
+
+  <h3>How the AI Encourages</h3>
+  <p>Every single response includes genuine, specific encouragement. The tutor is designed to always find something
+  authentic to praise, so that every child — regardless of their writing ability — finishes the interaction feeling
+  proud and motivated to write again tomorrow.</p>
+
+  <h3>How the AI Stores Progress</h3>
+  <p>Every diary entry and every AI response is permanently and securely stored against that child's profile. If a
+  child chooses to revise an entry using the tutor's hint, the platform keeps a full history of every attempt, so
+  progress and improvement over time is always visible.</p>
+
+  <h3>How Parents Can Review It</h3>
+  <p>Nothing the AI tutor says to a child is private from their parent. As shown in Section 3, every entry and every
+  piece of AI feedback appears on the parent's own Diary page, in full, at any time.</p>
+</section>
+
+<!-- ================= SECTION 5 ================= -->
+<section class="section" id="sec-5">
+  <div class="section-head"><span class="section-num">5</span><h2>Admin Content Management System</h2></div>
+  <p>Everything a child sees on Chindela — every story, lesson, character and safety message — is managed by your
+  team through the Admin Dashboard, entirely independently, without ever needing to ask a developer to write code or
+  deploy a change.</p>
+
+  <div class="cms-grid">
+    <div class="cms-chip">✓ Stories</div><div class="cms-chip">✓ Lessons</div><div class="cms-chip">✓ Characters</div><div class="cms-chip">✓ Images, Audio, Video &amp; PDFs</div><div class="cms-chip">✓ Safety Messages</div><div class="cms-chip">✓ Age Groups</div><div class="cms-chip">✓ Content Years</div>
+  </div>
+
+  <h3 class="subsection-heading">Story Management</h3>
+  
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/23-admin-story-management.png" alt="The Story Management screen, listing every story on the platform" />
+    <figcaption>The Story Management screen, listing every story on the platform</figcaption>
+  </figure>
+  <p>Administrators can create, edit, activate/deactivate, or remove stories from a simple table view. Creating a
+  new story takes only a couple of minutes.</p>
+  
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/32-admin-create-story-dialog.png" alt="Creating a brand-new story — title, description, cover image, age group and theme, all from one form" />
+    <figcaption>Creating a brand-new story — title, description, cover image, age group and theme, all from one form</figcaption>
+  </figure>
+
+  <h3 class="subsection-heading">Lesson Management</h3>
+  
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/24-admin-lesson-management.png" alt="Managing the individual pages (lessons) that make up each story" />
+    <figcaption>Managing the individual pages (lessons) that make up each story</figcaption>
+  </figure>
+  <p>Each story is made up of a sequence of lesson pages. Administrators can add, reorder, and edit each page's text,
+  image, audio narration, and character dialogue.</p>
+
+  <h3 class="subsection-heading">Character Management</h3>
+  
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/25-admin-character-management.png" alt="Managing the friendly characters who guide children through the platform" />
+    <figcaption>Managing the friendly characters who guide children through the platform</figcaption>
+  </figure>
+  <p>Each character's name, personality, catchphrase, colour theme and portrait image can be fully customised — new
+  characters can be introduced at any time.</p>
+
+  <h3 class="subsection-heading">Age Group Management</h3>
+  
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/27-admin-age-group-management.png" alt="Managing the age bands used to target content" />
+    <figcaption>Managing the age bands used to target content</figcaption>
+  </figure>
+  <p>Age groups (such as "3–4 years" or "5–7 years") control which stories and subscriptions are shown to which
+  children. New age bands can be added as the platform's audience grows.</p>
+
+  <h3 class="subsection-heading">Safety Header Management</h3>
+  
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/28-admin-safety-header-management.png" alt="Managing the reassuring safety messages shown to children" />
+    <figcaption>Managing the reassuring safety messages shown to children</figcaption>
+  </figure>
+  <p>The gentle safety reminders shown at the top of every child screen (for example, "Always tell a grown-up if
+  something makes you feel uncomfortable") are fully editable and can be targeted globally or to a specific age group.</p>
+
+  <h3 class="subsection-heading">Content Year Management</h3>
+  
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/29-admin-content-year-management.png" alt="Managing yearly content themes" />
+    <figcaption>Managing yearly content themes</figcaption>
+  </figure>
+  <p>Chindela organises its content into yearly themes (for example, "2025 — Year of Kindness"). Administrators can
+  plan and activate a new theme for each coming year, giving the platform a fresh focus annually without any
+  redevelopment.</p>
+
+  <p class="callout">Because every one of these screens follows the same simple create / edit / delete pattern shown
+  above, your team can manage the platform's entire library of educational content independently, for as long as the
+  platform runs.</p>
+</section>
+
+<!-- ================= SECTION 6 ================= -->
+<section class="section" id="sec-6">
+  <div class="section-head"><span class="section-num">6</span><h2>Media Library</h2></div>
+  <p>All images, audio, video, PDFs and documents used across the platform are managed from one central Media
+  Library, available to administrators from every content-editing screen.</p>
+
+  
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/26-admin-media-library.png" alt="The Media Library, showing uploaded files with filtering and search" />
+    <figcaption>The Media Library, showing uploaded files with filtering and search</figcaption>
+  </figure>
+
+  <div class="feature-grid">
+    <div><h4>Supported File Types</h4><p>Images, audio recordings, video, PDF documents, and general document files — everything needed for rich, multimedia storybooks.</p></div>
+    <div><h4>Upload</h4><p>Files are uploaded directly from an administrator's computer and are ready to attach to any story or lesson within moments.</p></div>
+    <div><h4>Preview</h4><p>Every file can be previewed directly in the browser before it is used, so administrators can confirm it is correct.</p></div>
+    <div><h4>Replace &amp; Delete</h4><p>Outdated files can be replaced with an updated version or removed entirely, keeping the library tidy over time.</p></div>
+    <div><h4>Search &amp; Filtering</h4><p>Files can be searched by name and filtered by type (image, audio, video, PDF, document), making it fast to find exactly what is needed even as the library grows.</p></div>
+    <div><h4>Secure Storage</h4><p>All uploaded files are stored securely using Amazon Web Services (AWS) cloud storage — the same infrastructure trusted by many of the world's largest websites.</p></div>
+  </div>
+</section>
+
+<!-- ================= SECTION 7 ================= -->
+<section class="section" id="sec-7">
+  <div class="section-head"><span class="section-num">7</span><h2>Subscriptions &amp; Payments</h2></div>
+  <p>All payments on Chindela are processed through <strong>Stripe</strong>, one of the world's most widely trusted
+  online payment providers, used by millions of businesses globally. Chindela never stores a family's card details
+  directly — Stripe handles that securely on the platform's behalf.</p>
+
+  
+  <figure class="shot ">
+    <div class="browser-chrome"><span></span><span></span><span></span></div>
+    <img src="screenshots/16-subscriptions-page.png" alt="The subscription plans available to parents" />
+    <figcaption>The subscription plans available to parents</figcaption>
+  </figure>
+
+  <h3>Pricing Plans</h3>
+  <div class="pricing-grid">
+    <div class="price-card"><strong>1 Month</strong><span>Flexible, short-term access</span></div>
+    <div class="price-card"><strong>2 Months</strong><span>A little more value</span></div>
+    <div class="price-card"><strong>3 Months</strong><span>A popular seasonal choice</span></div>
+    <div class="price-card"><strong>6 Months</strong><span>Better value for committed families</span></div>
+    <div class="price-card highlight"><strong>12 Months</strong><span>The best value, for a full year of stories</span></div>
+  </div>
+  <p>Pricing is consistent across every age group, so families with children of different ages always know what to
+  expect. Parents may also add an <strong>optional one-time contribution</strong> at checkout to directly support
+  the platform, entirely at their discretion.</p>
+
+  <h3>Test Mode Today, Live Mode at Launch</h3>
+  <p>Stripe is currently connected to the platform in <strong>test mode</strong> — the safe, standard way every
+  Stripe-powered platform is built and verified before launch. In test mode, the entire subscription and checkout
+  journey works exactly as it will for real customers, but no real money changes hands. Before going live, the
+  platform simply needs to be switched over to your organisation's live Stripe account (see Sections 10 and 11) —
+  no further development work is required to make this switch.</p>
+</section>
+
+<!-- ================= SECTION 8 ================= -->
+<section class="section" id="sec-8">
+  <div class="section-head"><span class="section-num">8</span><h2>Security &amp; Privacy</h2></div>
+  <p>Because Chindela is used by children, security has been treated as a foundational requirement throughout the
+  platform, not an afterthought. Below is a plain-language summary of the protections already built in.</p>
+
+  <div class="security-grid">
+    <div class="sec-card">
+      <div class="sec-icon">🔐</div>
+      <h4>Secure Login</h4>
+      <p>Every sign-in is protected against automated guessing attempts, and repeated failed attempts are
+      automatically slowed down to block attackers.</p>
+    </div>
+    <div class="sec-card">
+      <div class="sec-icon">🗝️</div>
+      <h4>Encrypted Passwords</h4>
+      <p>No password is ever stored in readable form. Every password is transformed using strong, one-way
+      encryption before it touches the database, the same standard used by major banks and technology companies.</p>
+    </div>
+    <div class="sec-card">
+      <div class="sec-icon">🧭</div>
+      <h4>Role Permissions</h4>
+      <p>Administrators, parents and children each see only what they are meant to see. A child, for example, can
+      never access a parent's billing details or another family's information.</p>
+    </div>
+    <div class="sec-card">
+      <div class="sec-icon">💳</div>
+      <h4>Secure Payments</h4>
+      <p>Card payments are handled entirely by Stripe. Chindela never sees or stores full card numbers, meeting the
+      same standards used by banks and major retailers.</p>
+    </div>
+    <div class="sec-card">
+      <div class="sec-icon">📁</div>
+      <h4>Protected Uploads</h4>
+      <p>Every uploaded file is checked and stored in secure, access-controlled cloud storage, preventing
+      unauthorised files or access.</p>
+    </div>
+    <div class="sec-card">
+      <div class="sec-icon">⏱️</div>
+      <h4>Session Management</h4>
+      <p>Parents can review and sign out of any device connected to their account, and a password reset instantly
+      signs out every other session automatically.</p>
+    </div>
+    <div class="sec-card">
+      <div class="sec-icon">🧒</div>
+      <h4>Safe Child Accounts</h4>
+      <p>Children never handle an email address or password. Their simplified PIN login, combined with parental
+      oversight of every diary entry and AI response, keeps their experience contained and supervised at all times.</p>
+    </div>
+  </div>
+  <p class="callout">Together, these protections mean that families' personal information, children's activity, and
+  every payment are handled with the same level of care as leading consumer platforms.</p>
+</section>
+
+<!-- ================= SECTION 9 ================= -->
+<section class="section" id="sec-9">
+  <div class="section-head"><span class="section-num">9</span><h2>Future Expansion</h2></div>
+  <p>Chindela has been deliberately engineered so that its content library can grow without limit and without any
+  future redevelopment cost. The platform places no ceiling on:</p>
+  <div class="cms-grid">
+    <div class="cms-chip">∞ Unlimited Stories</div><div class="cms-chip">∞ Unlimited Lessons</div><div class="cms-chip">∞ Unlimited Images</div><div class="cms-chip">∞ Unlimited Videos</div><div class="cms-chip">∞ Unlimited Audio Files</div><div class="cms-chip">∞ Unlimited PDFs</div><div class="cms-chip">∞ Unlimited Educational Resources</div><div class="cms-chip">∞ Unlimited Age Group Content</div>
+  </div>
+  <p>Every one of these is added through the same simple admin screens shown in Section 5. This means your
+  organisation's content team can expand Chindela's library for years to come — new stories every month, entirely
+  new age groups, additional languages, or new yearly themes — using the tools already built into the platform
+  today, with no additional engineering investment required simply to add more content.</p>
+</section>
+
+<!-- ================= SECTION 10 ================= -->
+<section class="section" id="sec-10">
+  <div class="section-head"><span class="section-num">10</span><h2>Infrastructure Required Before Launch</h2></div>
+  <p>The platform itself is complete. Before it can go live for real families, a small number of external service
+  accounts need to be set up under MJ CIC's own name — this is standard for any modern web platform and keeps your
+  organisation in full ownership and control of its own data, domain and finances.</p>
+
+  <table class="infra-table">
+    <thead><tr><th>Service</th><th>What It's For</th></tr></thead>
+    <tbody>
+      <tr><td>Stripe</td><td>Processing real subscription and contribution payments from families.</td></tr>
+      <tr><td>Amazon Web Services (AWS S3)</td><td>Secure cloud storage for every story image, audio file, video and document.</td></tr>
+      <tr><td>Hosting</td><td>The live server environment where the website will run around the clock.</td></tr>
+      <tr><td>Production Database</td><td>The permanent, secure store for every family, child, story and diary entry once live.</td></tr>
+      <tr><td>Resend</td><td>Delivers account emails to parents — welcome messages, password resets, and receipts.</td></tr>
+      <tr><td>Domain</td><td>Your organisation's own web address (for example, www.chindela.org), so families can find you.</td></tr>
+    </tbody>
+  </table>
+  <p>Setting up each of these accounts typically takes a matter of minutes; guidance for each is provided in Section 12.</p>
+</section>
+
+<!-- ================= SECTION 11 ================= -->
+<section class="section" id="sec-11">
+  <div class="section-head"><span class="section-num">11</span><h2>Current Development Status</h2></div>
+  <p>The Chindela platform is <strong>feature-complete</strong>. Every screen described in this guide is already
+  built, working, and has been demonstrated with real, live screenshots throughout this document.</p>
+
+  <h3>Completed</h3>
+  <div class="status-grid">
+    <div class="status-item done">✔ Authentication</div><div class="status-item done">✔ Parent Portal</div><div class="status-item done">✔ Child Portal</div><div class="status-item done">✔ Admin CMS</div><div class="status-item done">✔ Story Reader</div><div class="status-item done">✔ AI Tutor</div><div class="status-item done">✔ Stripe Integration</div><div class="status-item done">✔ Media Library</div><div class="status-item done">✔ Notifications</div><div class="status-item done">✔ Email System</div><div class="status-item done">✔ Security</div><div class="status-item done">✔ AWS Storage</div><div class="status-item done">✔ Account Management</div><div class="status-item done">✔ Subscription System</div><div class="status-item done">✔ Contributions</div><div class="status-item done">✔ Progress Tracking</div><div class="status-item done">✔ Responsive Design</div>
+  </div>
+
+  <h3>Remaining Before Production Launch</h3>
+  <div class="status-grid">
+    <div class="status-item pending">• Final deployment</div>
+    <div class="status-item pending">• Live infrastructure configuration</div>
+    <div class="status-item pending">• End-to-end production testing</div>
+    <div class="status-item pending">• Stripe Live activation</div>
+  </div>
+  <p class="callout">It's important to note what these remaining items are <em>not</em>: they are not missing
+  features or unfinished screens. Every item above is a <strong>deployment task</strong> — connecting the
+  already-built platform to your organisation's own live accounts (Section 10) and switching it on for the public.
+  The product itself is done.</p>
+</section>
+
+<!-- ================= SECTION 12 ================= -->
+<section class="section" id="sec-12">
+  <div class="section-head"><span class="section-num">12</span><h2>Next Steps</h2></div>
+  <p>To take Chindela from its current, fully-built state to a live public platform, the following steps are needed:</p>
+
+  <ol class="steps-list">
+    <li><strong>Create the service accounts</strong> listed in Section 10 — Stripe, AWS, hosting, and Resend — under MJ CIC's own name.</li>
+    <li><strong>Provide the resulting credentials</strong> for each service to your development team.</li>
+    <li><strong>The developer completes deployment</strong>, connecting the platform to your live accounts and production database.</li>
+    <li><strong>The developer performs end-to-end testing</strong> against the live environment, including a full real payment test through Stripe.</li>
+    <li><strong>Go live</strong> — the platform is switched on for real families to register and subscribe.</li>
+  </ol>
+  <p class="callout">We are ready to move to launch as soon as MJ CIC is ready to provide the accounts listed above.</p>
+</section>
+
+</body>
+</html>
