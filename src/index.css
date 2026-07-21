@@ -4,64 +4,77 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
-    --radius: 0.625rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Chindela brand palette — warm paper, forest green, sky blue, coral accent */
+    --background: 42 45% 97%;
+    --foreground: 155 28% 14%;
+    --card: 40 50% 99%;
+    --card-foreground: 155 28% 14%;
+    --popover: 40 50% 99%;
+    --popover-foreground: 155 28% 14%;
+    --primary: 152 42% 33%;
+    --primary-foreground: 40 45% 97%;
+    --secondary: 200 65% 90%;
+    --secondary-foreground: 202 45% 22%;
+    --muted: 42 25% 93%;
+    --muted-foreground: 155 12% 42%;
+    --accent: 16 82% 66%;
+    --accent-foreground: 0 0% 100%;
+    --success: 142 50% 38%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 88% 54%;
+    --warning-foreground: 30 40% 15%;
+    --info: 205 75% 52%;
+    --info-foreground: 0 0% 100%;
+    --destructive: 4 72% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 42 25% 87%;
+    --input: 42 25% 87%;
+    --ring: 152 42% 40%;
+    --radius: 0.85rem;
+    --sidebar-background: 40 40% 98%;
+    --sidebar-foreground: 155 25% 20%;
+    --sidebar-primary: 152 42% 33%;
+    --sidebar-primary-foreground: 40 45% 97%;
+    --sidebar-accent: 200 60% 92%;
+    --sidebar-accent-foreground: 202 45% 22%;
+    --sidebar-border: 42 25% 88%;
+    --sidebar-ring: 152 42% 40%;
   }
 
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --background: 154 22% 8%;
+    --foreground: 42 30% 94%;
+    --card: 154 18% 11%;
+    --card-foreground: 42 30% 94%;
+    --popover: 154 18% 11%;
+    --popover-foreground: 42 30% 94%;
+    --primary: 150 45% 48%;
+    --primary-foreground: 154 25% 8%;
+    --secondary: 202 35% 20%;
+    --secondary-foreground: 42 30% 94%;
+    --muted: 154 15% 16%;
+    --muted-foreground: 42 15% 68%;
+    --accent: 16 65% 56%;
+    --accent-foreground: 0 0% 100%;
+    --success: 142 45% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 40 80% 55%;
+    --warning-foreground: 30 40% 12%;
+    --info: 205 65% 55%;
+    --info-foreground: 0 0% 100%;
+    --destructive: 4 62% 48%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 154 15% 18%;
+    --input: 154 15% 18%;
+    --ring: 150 45% 50%;
+    --sidebar-background: 154 20% 9%;
+    --sidebar-foreground: 42 25% 90%;
+    --sidebar-primary: 150 45% 48%;
+    --sidebar-primary-foreground: 154 25% 8%;
+    --sidebar-accent: 154 15% 16%;
+    --sidebar-accent-foreground: 42 25% 90%;
+    --sidebar-border: 154 15% 18%;
+    --sidebar-ring: 150 45% 50%;
   }
 }
 
@@ -70,12 +83,35 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
   }
   html, body, #root {
     min-height: 100%;
   }
   button, [role="button"], a, input, textarea, select {
     -webkit-tap-highlight-color: transparent;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+}
+
+@layer utilities {
+  .surface-card {
+    @apply bg-card border border-border/60 rounded-xl shadow-soft;
+  }
+  .surface-blob {
+    @apply pointer-events-none absolute rounded-full blur-3xl opacity-40;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

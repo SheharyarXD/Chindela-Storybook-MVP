@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
+import { toast } from "sonner";
 import { trpc } from "@/providers/trpcClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,8 +19,9 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const onSuccess = (user: { role: string }) => navigate(user.role === "admin" ? "/admin" : "/dashboard");
-  const login = trpc.auth.login.useMutation({ onSuccess, onError: (e) => setError(e.message) });
-  const register = trpc.auth.register.useMutation({ onSuccess, onError: (e) => setError(e.message) });
+  const onError = (e: { message: string }) => { setError(e.message); toast.error(e.message); };
+  const login = trpc.auth.login.useMutation({ onSuccess, onError });
+  const register = trpc.auth.register.useMutation({ onSuccess, onError });
   const submit = (event: React.FormEvent) => {
     event.preventDefault(); setError("");
     if (isRegistering) register.mutate({ name, email, password, adminToken: isBootstrap ? adminToken : undefined }); else login.mutate({ email, password, rememberMe });

@@ -1,4 +1,7 @@
-import { Routes, Route } from 'react-router'
+import { Routes, Route, useLocation } from 'react-router'
+import { AnimatePresence } from 'framer-motion'
+import { Toaster } from '@/components/ui/sonner'
+import PageTransition from './components/PageTransition'
 import Home from './pages/Home'
 import Login from "./pages/Login"
 import NotFound from "./pages/NotFound"
@@ -20,36 +23,45 @@ import VerifyEmail from './pages/VerifyEmail'
 import ProtectedRoute from './components/ProtectedRoute'
 
 export default function App() {
+  const location = useLocation()
+
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/child-login" element={<ChildLogin />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/verify-email" element={<VerifyEmail />} />
+    <>
+      <Toaster position="top-right" richColors closeButton />
+      <AnimatePresence mode="wait" initial={false}>
+        <PageTransition>
+          <Routes location={location}>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/child-login" element={<ChildLogin />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
 
-      <Route element={<ProtectedRoute variant="parent" />}>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/stories" element={<StoryBrowser />} />
-        <Route path="/stories/:id" element={<StoryReader />} />
-        <Route path="/diary" element={<Diary />} />
-        <Route path="/subscriptions" element={<Subscriptions />} />
-        <Route path="/notifications" element={<Notifications />} />
-        <Route path="/account-security" element={<AccountSecurity />} />
-      </Route>
+            <Route element={<ProtectedRoute variant="parent" />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/stories" element={<StoryBrowser />} />
+              <Route path="/stories/:id" element={<StoryReader />} />
+              <Route path="/diary" element={<Diary />} />
+              <Route path="/subscriptions" element={<Subscriptions />} />
+              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/account-security" element={<AccountSecurity />} />
+            </Route>
 
-      <Route element={<ProtectedRoute variant="admin" />}>
-        <Route path="/admin" element={<AdminDashboard />} />
-      </Route>
+            <Route element={<ProtectedRoute variant="admin" />}>
+              <Route path="/admin" element={<AdminDashboard />} />
+            </Route>
 
-      <Route element={<ProtectedRoute variant="child" />}>
-        <Route path="/child" element={<ChildDashboard />} />
-        <Route path="/child/read/:id" element={<ChildReader />} />
-        <Route path="/child/diary" element={<ChildDiary />} />
-      </Route>
+            <Route element={<ProtectedRoute variant="child" />}>
+              <Route path="/child" element={<ChildDashboard />} />
+              <Route path="/child/read/:id" element={<ChildReader />} />
+              <Route path="/child/diary" element={<ChildDiary />} />
+            </Route>
 
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </PageTransition>
+      </AnimatePresence>
+    </>
   )
 }
